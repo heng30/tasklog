@@ -1,0 +1,26 @@
+import { Theme } from "../theme.slint";
+import { IconBtn } from "icon-btn.slint";
+
+export component ElevatedBtn inherits Rectangle {
+    width: Theme.icon-size + Theme.padding * 4;
+    height: self.width;
+    border-radius: root.width / 2;
+    background: btn.has-hover ? Theme.secondary-background.darker(10%) : Theme.secondary-background;
+    drop-shadow-blur: Theme.padding;
+    drop-shadow-color: Theme.secondary-background-drop-shadow;
+
+    in-out property icon <=> btn.icon;
+    in-out property rotation-type <=> btn.rotation-type;
+    in-out property colorize  <=> btn.colorize;
+    in-out property enable <=> btn.enabled-toucharea;
+    in-out property <angle> icon-rotation-angle;
+    in-out property gain-focus-when-clicked <=> btn.gain-focus-when-clicked;
+
+    callback clicked <=> btn.clicked;
+
+    btn := IconBtn {
+        icon-size: root.width * 0.65;
+        show-icon-hover-background: false;
+        icon-rotation-angle: root.icon-rotation-angle;
+    }
+}

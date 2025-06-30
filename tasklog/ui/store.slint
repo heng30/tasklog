@@ -1,0 +1,69 @@
+export enum DeviceType {
+    Desktop,
+    Mobile,
+    Web,
+}
+
+export enum TabIndex {
+    Home,
+    Setting,
+    About,
+    Donate,
+    Help,
+    Back,
+
+    Statistic,
+}
+
+export enum SettingDetailIndex {
+    Preference,
+}
+
+export struct SettingPreference {
+    win-width: string,
+    win-height: string,
+    font-size: string,
+    font-family: string,
+    language: string,
+    always-on-top: bool,
+    no-frame: bool,
+    is-dark: bool,
+}
+
+export struct SettingProxy {
+    proxy-type: string,
+    http-url: string,
+    http-port: string,
+    socks5-url: string,
+    socks5-port: string,
+}
+
+//////////////////////////////// Logic Struct Start ////////////////////////////////
+
+//////////////////////////////// Logic Struct End  ////////////////////////////////
+
+export global Store {
+    in-out property <DeviceType> device-type: DeviceType.Desktop;
+    in-out property <bool> is-first-run;
+    in-out property <bool> is-show-landing-page: false;
+
+    in-out property <TabIndex> previous-tab-index: TabIndex.Home;
+    in-out property <TabIndex> current-tab-index: TabIndex.Home;
+    in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
+
+    in-out property <bool> is-cn: setting-preference.language == "cn";
+    in-out property <SettingPreference> setting-preference: {
+        win-width: 500,
+        win-height: 800,
+        font-size: "16",
+        font-family: "Source Han Sans CN",
+        language: "en",
+        always-on-top: false,
+        no-frame: true,
+        is-dark: false,
+    };
+
+    //////////////////////////////// Logic Start ////////////////////////////////
+
+    //////////////////////////////// Logic End  ////////////////////////////////
+}

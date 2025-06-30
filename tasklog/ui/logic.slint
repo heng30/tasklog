@@ -1,0 +1,56 @@
+import { Store,  SettingPreference, SettingProxy, TabIndex, SettingDetailIndex } from "store.slint";
+
+import { SideBarEntry } from "base/def.slint";
+
+export global Logic {
+    callback update-cache-size();
+    callback remove-all-cache();
+
+    callback copy-to-clipboard(text: string);
+    callback paste-from-clipboard() -> string;
+
+    callback get-setting-preference() -> SettingPreference;
+    callback set-setting-preference(setting: SettingPreference);
+
+    callback get-setting-proxy() -> SettingProxy;
+    callback set-setting-proxy(setting: SettingProxy);
+
+    callback increase-font-size();
+    callback decrease-font-size();
+
+    pure callback inner-tr(is-cn: bool, text: string) -> string;
+    inner-tr(is-cn, text) => {
+        return text;
+    }
+
+    pure public function tr(text: string) -> string {
+        inner-tr(Store.is-cn, text)
+    }
+
+    public function switch-setting-detail(index: SettingDetailIndex) {
+        if (Store.current-setting-detail-index == index) {
+            return;
+        }
+        Store.current-setting-detail-index = index;
+    }
+
+    public function switch-tab(index: TabIndex) {
+        if (Store.current-tab-index == index) {
+            return;
+        }
+        if (index == TabIndex.Back) {
+            Store.current-tab-index = Store.previous-tab-index;
+        } else {
+            Store.previous-tab-index = Store.current-tab-index;
+            Store.current-tab-index = index;
+        }
+    }
+
+    //////////////////////////////// Logic Start  ////////////////////////////////
+
+    callback web-debug(text: string);
+    pure callback generate-search-values(entries: [SideBarEntry]) -> [string];
+    pure callback get-sidebar-key-from-search-values(entries: [SideBarEntry], value: string) -> string;
+
+    //////////////////////////////// Logic End  ////////////////////////////////
+}

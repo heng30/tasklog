@@ -1,0 +1,15 @@
+import { Theme, Icons } from "../../theme.slint";
+import { Util } from "../../util.slint";
+import { Logic } from "../../logic.slint";
+import { Store, TabIndex } from "../../store.slint";
+import { SettingIconsBar }  from "../setting/desktop.slint";
+
+import { Record } from "record.slint";
+import { Statistic } from "statistic.slint";
+
+export component Home inherits VerticalLayout {
+    padding: Theme.padding * 2;
+
+    if Store.current-tab-index == TabIndex.Home: Record { }
+    if Store.current-tab-index == TabIndex.Statistic: Statistic { }
+}
