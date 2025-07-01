@@ -40,6 +40,22 @@ export struct SettingProxy {
 
 //////////////////////////////// Logic Struct Start ////////////////////////////////
 
+export enum RecordState {
+    Unfinish,
+    Finished,
+    Giveup,
+    Timeout,
+}
+
+export struct RecordEntry{
+    start-date: string,
+    end-date: string,
+    title: string,
+    description: string,
+    plan: string,
+    state: RecordState,
+}
+
 //////////////////////////////// Logic Struct End  ////////////////////////////////
 
 export global Store {
@@ -64,6 +80,17 @@ export global Store {
     };
 
     //////////////////////////////// Logic Start ////////////////////////////////
+
+    in-out property <[RecordEntry]> record-entries: [
+        {
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning",
+            description: "It's a simple description",
+            plan: "A simple plane",
+            state: RecordState.Unfinish,
+        }
+    ];
 
     //////////////////////////////// Logic End  ////////////////////////////////
 }

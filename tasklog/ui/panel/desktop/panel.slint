@@ -1,9 +1,9 @@
 import { Theme, Store, TabIndex, SettingDetailIndex, Logic, Icons } from "../def.slint";
-import { SettingDialog, HelpDialog, DonateDialog, AboutDialog, SettingIconsBar } from "../setting/desktop.slint";
+import { SettingDialog, HelpDialog, DonateDialog, AboutDialog, HorizontalSettingIconsBar, VerticalSettingIconsBar } from "../setting/desktop.slint";
 import { Blanket, StatusBar, Divider, IconBtn, ComponentPosition, AboutSetting, ToolTip, ToolTipSetting, PopupAction, PopupActionSetting } from "../../base/widgets.slint";
 import { Home } from "home.slint";
 
-component HomeIconsBar inherits Rectangle {
+component HorizontalHomeIconsBar inherits Rectangle {
     width: hbox.preferred-width;
     height: hbox.preferred-height;
     border-radius: Theme.border-radius;
@@ -47,6 +47,106 @@ component HomeIconsBar inherits Rectangle {
     }
 }
 
+component HorizontalStatusBar inherits StatusBar {
+    background: Theme.secondary-background;
+    is-show-icon: Store.setting-preference.no-frame;
+    icon: Icons.brand;
+    title: AboutSetting.app-name;
+    is-show-tip: true;
+
+    HorizontalLayout {
+        padding-right: Theme.padding * 2;
+
+        HorizontalHomeIconsBar {
+            icon-size: Theme.default-font-size;
+            h-spacing: Theme.spacing * 3;
+            show-icon-hover-background: false;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+        }
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            Divider {
+                height: Theme.default-font-size;
+                width: 2px;
+            }
+        }
+
+        HorizontalSettingIconsBar {
+            icon-size: Theme.default-font-size;
+            h-spacing: Theme.spacing * 3;
+            show-icon-hover-background: false;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            disable-padding-right: root.disable-window-ctrl-btns;
+        }
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            Divider {
+                height: Theme.default-font-size;
+                width: 2px;
+            }
+        }
+    }
+}
+
+component VerticalStatusBar inherits Rectangle {
+    background: Theme.secondary-background;
+
+    private property <bool> is-show-tip: true;
+    private property <bool> show-icon-hover-background: false;
+    private property <length> icon-size: Theme.icon-size;
+    private property <ComponentPosition> tip-position: ComponentPosition.Right;
+
+    VerticalLayout {
+        alignment: space-between;
+
+        VerticalLayout {
+            spacing: Theme.spacing * 5;
+            padding: Theme.padding * 2;
+            padding-top: Theme.padding * 5;
+
+            IconBtn {
+                icon: Icons.record-fill;
+                icon-size: root.icon-size;
+                show-icon-hover-background: root.show-icon-hover-background;
+                is-show-tip: root.is-show-tip;
+                tip-position: root.tip-position;
+                tip: Logic.tr("home");
+
+                clicked => {
+                    Logic.switch-tab(TabIndex.Home);
+                }
+            }
+
+            IconBtn {
+                icon: Icons.statistic-fill;
+                icon-size: root.icon-size;
+                show-icon-hover-background: root.show-icon-hover-background;
+                is-show-tip: root.is-show-tip;
+                tip-position: root.tip-position;
+                tip: Logic.tr("statistic");
+
+                clicked => {
+                    Logic.switch-tab(TabIndex.Statistic);
+                }
+            }
+        }
+
+        VerticalSettingIconsBar {
+            icon-size: Theme.icon-size;
+            v-spacing: Theme.spacing * 5;
+            v-padding: Theme.padding * 2;
+            v-padding-bottom: Theme.padding * 5;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+        }
+    }
+}
+
 export component DesktopPanel inherits Rectangle {
     private property <bool> is-show-setting-dialog: Store.current-tab-index == TabIndex.Setting;
     private property <bool> is-show-about-dialog: Store.current-tab-index == TabIndex.About;
@@ -58,59 +158,18 @@ export component DesktopPanel inherits Rectangle {
     background: Theme.base-background;
 
     VerticalLayout {
-        sb := StatusBar {
-            background: Theme.secondary-background;
-            is-show-icon: Store.setting-preference.no-frame;
-            disable-window-ctrl-btns: !self.is-show-icon;
-            icon: Icons.brand;
-            title: AboutSetting.app-name;
-            is-show-tip: true;
-
+        if Store.setting-preference.no-frame: HorizontalStatusBar {
             init => {
                 root.home-height = root.height - self.preferred-height;
             }
-
-            HorizontalLayout {
-                padding-right: sb.disable-window-ctrl-btns ? 0 : Theme.padding * 2;
-
-                HomeIconsBar {
-                    icon-size: Theme.default-font-size;
-                    h-spacing: Theme.spacing * 3;
-                    show-icon-hover-background: false;
-                    is-show-tip: sb.is-show-tip;
-                    tip-position: sb.tip-position;
-                }
-
-                VerticalLayout {
-                    alignment: LayoutAlignment.center;
-                    Divider {
-                        height: Theme.default-font-size;
-                        width: 2px;
-                    }
-                }
-
-                SettingIconsBar {
-                    icon-size: Theme.default-font-size;
-                    h-spacing: Theme.spacing * 3;
-                    show-icon-hover-background: false;
-                    is-show-tip: sb.is-show-tip;
-                    tip-position: sb.tip-position;
-                    disable-padding-right: sb.disable-window-ctrl-btns;
-                }
-
-                if !sb.disable-window-ctrl-btns: VerticalLayout {
-                    alignment: LayoutAlignment.center;
-                    Divider {
-                        height: Theme.default-font-size;
-                        width: 2px;
-                    }
-                }
-            }
         }
 
-        Home {
-            // uncomment it to set real height
-            // height: root.home-height;
+        HorizontalLayout {
+            height: root.home-height;
+
+            if !Store.setting-preference.no-frame: VerticalStatusBar { }
+
+            Home { }
         }
     }
 

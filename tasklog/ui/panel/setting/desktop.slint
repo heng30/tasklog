@@ -123,7 +123,7 @@ export component DonateDialog inherits Dialog {
     }
 }
 
-export component SettingIconsBar inherits Rectangle {
+export component HorizontalSettingIconsBar inherits Rectangle {
     width: hbox.preferred-width;
     height: hbox.preferred-height;
     border-radius: Theme.border-radius;
@@ -139,6 +139,91 @@ export component SettingIconsBar inherits Rectangle {
     hbox := HorizontalLayout {
         padding: Theme.padding * 2;
         padding-right: disable-padding-right ? 0 : self.padding;
+        spacing: Theme.spacing * 4;
+
+        IconBtn {
+            icon: Icons.setting-fill;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("setting");
+
+            clicked => {
+                Logic.switch-tab(TabIndex.Setting);
+            }
+        }
+
+        IconBtn {
+            icon: Icons.help;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("help");
+
+            clicked => {
+                Logic.switch-tab(TabIndex.Help);
+            }
+        }
+
+        IconBtn {
+            icon: Icons.about-fill;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("about");
+
+            clicked => {
+                Logic.switch-tab(TabIndex.About);
+            }
+        }
+
+        IconBtn {
+            icon: Icons.donate;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("donate");
+
+            clicked => {
+                Logic.switch-tab(TabIndex.Donate);
+            }
+        }
+
+        IconBtn {
+            icon: Icons.github;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("github");
+
+            clicked => {
+                Util.open-url("Default","https://github.com/Heng30/flymoon");
+            }
+        }
+    }
+}
+
+export component VerticalSettingIconsBar inherits Rectangle {
+    width: vbox.preferred-width;
+    height: vbox.preferred-height;
+    border-radius: Theme.border-radius;
+
+    in-out property <bool> show-icon-hover-background: false;
+    in-out property <length> icon-size: Theme.icon-size;
+    in-out property <bool> is-show-tip: false;
+    in-out property <ComponentPosition> tip-position;
+    in-out property <length> v-padding-bottom;
+    in-out property v-padding <=> vbox.padding;
+    in-out property v-spacing <=> vbox.spacing;
+
+    vbox := VerticalLayout {
+        padding: Theme.padding * 2;
+        padding-bottom: root.v-padding-bottom;
         spacing: Theme.spacing * 4;
 
         IconBtn {
