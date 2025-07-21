@@ -1,9 +1,150 @@
+import { ListView, DatePickerPopup } from "std-widgets.slint";
+
+import { RecordState } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
+import { LineInput, Label, IconBtn, FlashProgress } from "../../base/widgets.slint";
+
+component DateField inherits HorizontalLayout {
+    in-out property <string> text;
+
+    callback clicked <=> ta.clicked;
+    callback hover(has-hover: bool);
+
+    Label {
+        text: root.text;
+
+        ta := TouchArea {
+            mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+            changed has-hover => {
+                root.hover(self.has-hover);
+            }
+        }
+    }
+}
 
 export component Record inherits VerticalLayout {
     spacing: Theme.spacing * 2;
 
-    Rectangle {
-        background: blue;
+    private property <length> date-field-length: Theme.default-font-size * 8;
+
+    function progress-color(state: RecordState) -> color {
+        if (state == RecordState.Unfinish) {
+            return Theme.thirdly-brand-color;
+        } else if (state == RecordState.Finished) {
+            return Theme.success-color;
+        } else if (state == RecordState.Giveup) {
+            return Theme.danger-color;
+        } else {
+            return Theme.warning-color;
+        }
+    }
+
+    // TODO
+    function calc-progress(start-date: string, end-date: string) -> float {
+        return 0.5;
+    }
+
+    lv := ListView {
+        for entry[index] in Store.record-entries: vbox := VerticalLayout {
+            padding-bottom: Theme.padding;
+
+            private property <bool> is-hover;
+            private property <bool> is-edit-title;
+
+            Rectangle {
+                background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.hover-background : Colors.transparent);
+                border-radius: Theme.border-radius;
+
+                ta := TouchArea { }
+
+                HorizontalLayout {
+                    spacing: Theme.spacing * 4;
+                    padding-left: Theme.padding * 4;
+                    padding-right: Theme.padding * 4;
+                    padding-top: Theme.padding * 2;
+                    padding-bottom: Theme.padding * 2;
+
+                    DateField {
+                        text: entry.start-date;
+                        clicked => {
+                            date-picker.show();
+                        }
+                        hover(has-hover) => {
+                            vbox.is-hover = has-hover;
+                        }
+                    }
+
+                    DateField {
+                        text: entry.end-date;
+                        clicked => {
+                            date-picker.show();
+                        }
+                        hover(has-hover) => {
+                            vbox.is-hover = has-hover;
+                        }
+                    }
+
+                    if is-edit-title: LineInput {
+                        // width: Math.min(parent.width * 30%, self.preferred-width);
+                        width: 30%;
+                        text: entry.title;
+                        is-show-icon: true;
+                        icon: Icons.checked-box;
+
+                        accepted => {
+                            is-edit-title = false;
+                        }
+
+                        clicked => {
+                            is-edit-title = false;
+                        }
+                    }
+
+                    if !is-edit-title: Label {
+                        // width: Math.min(parent.width * 30%, self.preferred-width);
+                        width: 30%;
+                        text: entry.title;
+                        overflow: elide;
+
+                        TouchArea {
+                            clicked => {
+                                is-edit-title = true
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        FlashProgress {
+                            progress: calc-progress(entry.start-date, entry.end-date);
+                            finished-color: progress-color(entry.state);
+                        }
+                    }
+
+                    IconBtn {
+                        icon: Icons.more-v;
+                        show-icon-hover-background: false;
+
+                        clicked => {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    date-picker := DatePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        close-policy: PopupClosePolicy.close-on-click-outside;
+
+        accepted(date) => {
+            debug(date.year + "-" + date.month + "-" + date.day);
+            self.close();
+        }
+        canceled => {
+            self.close();
+        }
     }
 }

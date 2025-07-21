@@ -48,10 +48,10 @@ export enum RecordState {
 }
 
 export struct RecordEntry{
+    uuid: string,
     start-date: string,
     end-date: string,
     title: string,
-    description: string,
     plan: string,
     state: RecordState,
 }
@@ -83,12 +83,36 @@ export global Store {
 
     in-out property <[RecordEntry]> record-entries: [
         {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world",
+            plan: "A simple plane",
+            state: RecordState.Unfinish,
+        },
+        {
+            uuid: "uuid-2",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. goode",
+            plan: "A simple plane",
+            state: RecordState.Finished,
+        },
+        {
+            uuid: "uuid-3",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. fix",
+            plan: "A simple plane",
+            state: RecordState.Giveup,
+        },
+        {
+            uuid: "uuid-4",
             start-date: "2025-01-02",
             end-date: "2025-03-02",
             title: "Study Deep Learning",
-            description: "It's a simple description",
             plan: "A simple plane",
-            state: RecordState.Unfinish,
+            state: RecordState.Timeout,
         }
     ];
 
