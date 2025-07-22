@@ -6,13 +6,16 @@ export enum DeviceType {
 
 export enum TabIndex {
     Home,
+    Statistic,
+    Back,
+}
+
+export enum PopupIndex {
     Setting,
     About,
     Donate,
     Help,
-    Back,
-
-    Statistic,
+    None,
 }
 
 export enum SettingDetailIndex {
@@ -40,6 +43,12 @@ export struct SettingProxy {
 
 //////////////////////////////// Logic Struct Start ////////////////////////////////
 
+export enum SortRecord {
+    Start,
+    End,
+    Goal,
+}
+
 export enum RecordState {
     Unfinish,
     Finished,
@@ -65,6 +74,7 @@ export global Store {
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
     in-out property <TabIndex> current-tab-index: TabIndex.Home;
+    in-out property <PopupIndex> current-popup-index: PopupIndex.None;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";

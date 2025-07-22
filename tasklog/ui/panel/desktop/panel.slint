@@ -1,4 +1,4 @@
-import { Theme, Store, TabIndex, SettingDetailIndex, Logic, Icons } from "../def.slint";
+import { Theme, Store, TabIndex, PopupIndex, SettingDetailIndex, Logic, Icons } from "../def.slint";
 import { SettingDialog, HelpDialog, DonateDialog, AboutDialog, HorizontalSettingIconsBar, VerticalSettingIconsBar } from "../setting/desktop.slint";
 import { Blanket, StatusBar, Divider, IconBtn, ComponentPosition, AboutSetting, ToolTip, ToolTipSetting, PopupAction, PopupActionSetting } from "../../base/widgets.slint";
 import { Home } from "home.slint";
@@ -148,10 +148,10 @@ component VerticalStatusBar inherits Rectangle {
 }
 
 export component DesktopPanel inherits Rectangle {
-    private property <bool> is-show-setting-dialog: Store.current-tab-index == TabIndex.Setting;
-    private property <bool> is-show-about-dialog: Store.current-tab-index == TabIndex.About;
-    private property <bool> is-show-help-dialog: Store.current-tab-index == TabIndex.Help;
-    private property <bool> is-show-donate-dialog: Store.current-tab-index == TabIndex.Donate;
+    private property <bool> is-show-setting-dialog: Store.current-popup-index == PopupIndex.Setting;
+    private property <bool> is-show-about-dialog: Store.current-popup-index == PopupIndex.About;
+    private property <bool> is-show-help-dialog: Store.current-popup-index == PopupIndex.Help;
+    private property <bool> is-show-donate-dialog: Store.current-popup-index == PopupIndex.Donate;
 
     private property <length> home-height: self.height;
 
@@ -175,7 +175,7 @@ export component DesktopPanel inherits Rectangle {
 
     if is-show-setting-dialog || is-show-about-dialog || is-show-help-dialog || is-show-donate-dialog: Blanket {
         clicked => {
-            Logic.switch-tab(TabIndex.Back);
+            Logic.switch-popup(PopupIndex.None);
         }
     }
 

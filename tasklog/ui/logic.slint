@@ -1,4 +1,4 @@
-import { Store,  SettingPreference, SettingProxy, TabIndex, SettingDetailIndex } from "store.slint";
+import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, SortRecord } from "store.slint";
 
 import { SideBarEntry } from "base/def.slint";
 
@@ -46,11 +46,14 @@ export global Logic {
         }
     }
 
+    public function switch-popup(index: PopupIndex) {
+        Store.current-popup-index = index;
+    }
+
     //////////////////////////////// Logic Start  ////////////////////////////////
 
-    callback web-debug(text: string);
-    pure callback generate-search-values(entries: [SideBarEntry]) -> [string];
-    pure callback get-sidebar-key-from-search-values(entries: [SideBarEntry], value: string) -> string;
+    callback add-record();
+    callback sort-record(ty: SortRecord);
 
     //////////////////////////////// Logic End  ////////////////////////////////
 }

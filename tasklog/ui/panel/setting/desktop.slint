@@ -1,4 +1,4 @@
-import { Logic, Theme, Store, Util, TabIndex, Icons, SettingPreference, SettingProxy, SettingDetailIndex, DeviceType } from "../def.slint";
+import { Logic, Theme, Store, Util, TabIndex, PopupIndex, Icons, SettingPreference, SettingProxy, SettingDetailIndex, DeviceType } from "../def.slint";
 import { IconBtn, SettingEntryV2, Head, SettingDetail, ToastStatus, About, Dialog, ComponentPosition, TabBtns, Help } from "../../base/widgets.slint";
 import { Preference } from "components/preference.slint";
 import { Donate } from "components/donate.slint";
@@ -66,7 +66,7 @@ export component SettingDialog inherits Dialog {
     }
 
     cancel-clicked => {
-        Logic.switch-tab(TabIndex.Back);
+        Logic.switch-popup(PopupIndex.None);
     }
 }
 
@@ -83,7 +83,7 @@ export component AboutDialog inherits Dialog {
     }
 
     cancel-clicked => {
-        Logic.switch-tab(TabIndex.Back);
+        Logic.switch-popup(PopupIndex.None);
     }
 }
 
@@ -102,7 +102,7 @@ export component HelpDialog inherits Dialog {
     }
 
     cancel-clicked => {
-        Logic.switch-tab(TabIndex.Back);
+        Logic.switch-popup(PopupIndex.None);
     }
 }
 
@@ -119,7 +119,7 @@ export component DonateDialog inherits Dialog {
     }
 
     cancel-clicked => {
-        Logic.switch-tab(TabIndex.Back);
+        Logic.switch-popup(PopupIndex.None);
     }
 }
 
@@ -150,7 +150,7 @@ export component HorizontalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("setting");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Setting);
+                Logic.switch-popup(PopupIndex.Setting);
             }
         }
 
@@ -163,7 +163,7 @@ export component HorizontalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("help");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Help);
+                Logic.switch-popup(PopupIndex.Help);
             }
         }
 
@@ -176,7 +176,7 @@ export component HorizontalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("about");
 
             clicked => {
-                Logic.switch-tab(TabIndex.About);
+                Logic.switch-popup(PopupIndex.About);
             }
         }
 
@@ -189,7 +189,7 @@ export component HorizontalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("donate");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Donate);
+                Logic.switch-popup(PopupIndex.Donate);
             }
         }
 
@@ -235,7 +235,7 @@ export component VerticalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("setting");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Setting);
+                Logic.switch-popup(PopupIndex.Setting);
             }
         }
 
@@ -248,7 +248,7 @@ export component VerticalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("help");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Help);
+                Logic.switch-popup(PopupIndex.Help);
             }
         }
 
@@ -261,7 +261,7 @@ export component VerticalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("about");
 
             clicked => {
-                Logic.switch-tab(TabIndex.About);
+                Logic.switch-popup(PopupIndex.About);
             }
         }
 
@@ -274,7 +274,7 @@ export component VerticalSettingIconsBar inherits Rectangle {
             tip: Logic.tr("donate");
 
             clicked => {
-                Logic.switch-tab(TabIndex.Donate);
+                Logic.switch-popup(PopupIndex.Donate);
             }
         }
 

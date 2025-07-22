@@ -1,31 +1,86 @@
 import { ListView, DatePickerPopup } from "std-widgets.slint";
 
-import { RecordState } from "../../store.slint";
+import { RecordState, SortRecord } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { LineInput, Label, IconBtn, FlashProgress } from "../../base/widgets.slint";
+import { LineInput, Label, IconBtn, FlashProgress, ConfirmBtn } from "../../base/widgets.slint";
 
-component DateField inherits HorizontalLayout {
-    in-out property <string> text;
 
-    callback clicked <=> ta.clicked;
-    callback hover(has-hover: bool);
+export component TableHeader inherits Rectangle {
+    in-out property <length> title-start-date-width;
+    in-out property <length> title-end-date-width;
 
-    Label {
-        text: root.text;
+    background: Theme.thirdly-background.darker(Store.setting-preference.is-dark ? 50% : 20%);
 
-        ta := TouchArea {
-            mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
-            changed has-hover => {
-                root.hover(self.has-hover);
+    HorizontalLayout {
+        padding-left: Theme.padding * 4;
+        padding-right: Theme.padding * 4;
+        padding-top: Theme.padding * 3;
+        padding-bottom: Theme.padding * 3;
+        alignment: LayoutAlignment.space-between;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.start;
+            spacing: Theme.spacing * 4;
+
+            title-start-date := Label {
+                width: title-start-date-width;
+                text: Logic.tr("START");
+                font-weight: Theme.bold-font-weight;
+                font-size: Theme.title3-font-size;
+
+                TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    clicked => {
+                        Logic.sort-record(SortRecord.Start);
+                    }
+                }
+            }
+
+            title-end-date := Label {
+                width: title-end-date-width;
+                text: Logic.tr("END");
+                font-weight: Theme.bold-font-weight;
+                font-size: Theme.title3-font-size;
+
+                TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    clicked => {
+                        Logic.sort-record(SortRecord.End);
+                    }
+                }
+            }
+
+            title-goal := Label {
+                width: 30%;
+                text: Logic.tr("GOAL");
+                font-weight: Theme.bold-font-weight;
+                font-size: Theme.title3-font-size;
+
+                TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    clicked => {
+                        Logic.sort-record(SortRecord.Goal);
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-right: Theme.padding * 2;
+            ConfirmBtn {
+                icon: Icons.add-small;
+                text: Logic.tr("New");
+                clicked => {
+                    Logic.add-record();
+                }
             }
         }
     }
 }
 
-export component Record inherits VerticalLayout {
-    spacing: Theme.spacing * 2;
-
-    private property <length> date-field-length: Theme.default-font-size * 8;
+export component TableBody inherits ListView {
+    in-out property <length> title-start-date-width;
+    in-out property <length> title-end-date-width;
 
     function progress-color(state: RecordState) -> color {
         if (state == RecordState.Unfinish) {
@@ -44,107 +99,120 @@ export component Record inherits VerticalLayout {
         return 0.5;
     }
 
-    lv := ListView {
-        for entry[index] in Store.record-entries: vbox := VerticalLayout {
-            padding-bottom: Theme.padding;
+    for entry[index] in Store.record-entries: vbox := VerticalLayout {
+        private property <bool> is-hover;
+        private property <bool> is-edit-title;
 
-            private property <bool> is-hover;
-            private property <bool> is-edit-title;
+        Rectangle {
+            background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 1 ? Theme.hover-background : Colors.transparent);
 
-            Rectangle {
-                background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.hover-background : Colors.transparent);
-                border-radius: Theme.border-radius;
+            ta := TouchArea { }
 
-                ta := TouchArea { }
+            HorizontalLayout {
+                spacing: Theme.spacing * 4;
+                padding-left: Theme.padding * 4;
+                padding-right: Theme.padding * 4;
+                padding-top: Theme.padding * 3;
+                padding-bottom: Theme.padding * 3;
 
-                HorizontalLayout {
-                    spacing: Theme.spacing * 4;
-                    padding-left: Theme.padding * 4;
-                    padding-right: Theme.padding * 4;
-                    padding-top: Theme.padding * 2;
-                    padding-bottom: Theme.padding * 2;
-
-                    DateField {
-                        text: entry.start-date;
-                        clicked => {
-                            date-picker.show();
-                        }
-                        hover(has-hover) => {
-                            vbox.is-hover = has-hover;
-                        }
+                Label {
+                    init => {
+                        title-start-date-width = self.preferred-width;
                     }
+                    text: entry.start-date;
+                }
 
-                    DateField {
-                        text: entry.end-date;
-                        clicked => {
-                            date-picker.show();
-                        }
-                        hover(has-hover) => {
-                            vbox.is-hover = has-hover;
-                        }
+                Label {
+                    init => {
+                        title-end-date-width = self.preferred-width;
                     }
+                    text: entry.end-date;
+                }
 
-                    if is-edit-title: LineInput {
-                        // width: Math.min(parent.width * 30%, self.preferred-width);
-                        width: 30%;
-                        text: entry.title;
-                        is-show-icon: true;
-                        icon: Icons.checked-box;
+                Label {
+                    width: 30%;
+                    text: entry.title;
+                    overflow: elide;
+                }
 
-                        accepted => {
-                            is-edit-title = false;
-                        }
+                VerticalLayout {
+                    alignment: LayoutAlignment.center;
 
-                        clicked => {
-                            is-edit-title = false;
-                        }
+                    FlashProgress {
+                        progress: calc-progress(entry.start-date, entry.end-date);
+                        finished-color: progress-color(entry.state);
                     }
+                }
 
-                    if !is-edit-title: Label {
-                        // width: Math.min(parent.width * 30%, self.preferred-width);
-                        width: 30%;
-                        text: entry.title;
-                        overflow: elide;
+                IconBtn {
+                    icon: Icons.more-v;
+                    show-icon-hover-background: false;
 
-                        TouchArea {
-                            clicked => {
-                                is-edit-title = true
-                            }
-                        }
-                    }
-
-                    VerticalLayout {
-                        alignment: LayoutAlignment.center;
-
-                        FlashProgress {
-                            progress: calc-progress(entry.start-date, entry.end-date);
-                            finished-color: progress-color(entry.state);
-                        }
-                    }
-
-                    IconBtn {
-                        icon: Icons.more-v;
-                        show-icon-hover-background: false;
-
-                        clicked => {
-                        }
+                    clicked => {
                     }
                 }
             }
         }
     }
+}
 
-    date-picker := DatePickerPopup {
-        x: (root.width - self.width) / 2;
-        y: (root.height - self.height) / 2;
-        close-policy: PopupClosePolicy.close-on-click-outside;
+export component Record inherits VerticalLayout {
+    // padding-top: Theme.padding * 2;
+    private property <length> title-start-date-width;
+    private property <length> title-end-date-width;
 
-        accepted(date) => {
-            debug(date.year + "-" + date.month + "-" + date.day);
-            self.close();
-        }
-        canceled => {
-            self.close();
+    Rectangle {
+        border-width: Theme.default-border-width;
+        border-color: Theme.primary-text-color;
+
+        VerticalLayout {
+            padding: parent.border-width;
+
+            TableHeader {
+                title-start-date-width: title-start-date-width;
+                title-end-date-width: title-end-date-width;
+            }
+
+            TableBody {
+                changed title-start-date-width => {
+                    root.title-end-date-width = self.title-end-date-width;
+                }
+
+                changed title-end-date-width => {
+                    root.title-start-date-width = self.title-start-date-width;
+                }
+            }
         }
     }
 }
+
+    // date-picker := DatePickerPopup {
+    //     x: (root.width - self.width) / 2;
+    //     y: (root.height - self.height) / 2;
+    //     close-policy: PopupClosePolicy.close-on-click-outside;
+    //
+    //     accepted(date) => {
+    //         debug(date.year + "-" + date.month + "-" + date.day);
+    //         self.close();
+    //     }
+    //     canceled => {
+    //         self.close();
+    //     }
+    // }
+
+                    // if is-edit-title: LineInput {
+                    //     // width: Math.min(parent.width * 30%, self.preferred-width);
+                    //     width: 30%;
+                    //     text: entry.title;
+                    //     is-show-icon: true;
+                    //     icon: Icons.checked-box;
+                    //
+                    //     accepted => {
+                    //         is-edit-title = false;
+                    //     }
+                    //
+                    //     clicked => {
+                    //         is-edit-title = false;
+                    //     }
+                    // }
+
