@@ -1,0 +1,159 @@
+import { Icons, Theme } from "../theme.slint";
+import { IconBtn } from "icon-btn.slint";
+import { Label } from "label.slint";
+
+component DateCell inherits Rectangle {
+    in-out property <int> cell-value;
+    in-out property <int> cell-index;
+    in-out property <length> cell-size;
+    in-out property <int> selected-index;
+    in-out property <bool> is-not-in-month;
+
+    private property <bool> is-selected: cell-index == selected-index;
+
+    height: cell-size;
+    width: cell-size;
+    border-radius: Theme.border-radius;
+    background: ta.has-hover ? Theme.thirdly-brand-color : (is-selected ? Theme.thirdly-brand-color : (is-not-in-month ? Colors.transparent : Theme.hover-background));
+
+    callback clicked <=> ta.clicked;
+
+    ta := TouchArea { }
+
+    Label {
+        text: parent.cell-value;
+        color: is-selected || ta.has-hover ? Theme.light-text-color : Theme.regular-text-color;
+    }
+}
+
+export component DatePicker inherits Rectangle {
+    in-out property <int> current-year: 1900;
+    in-out property <int> current-month: 05;
+    in-out property <int> current-day: 30;
+    in-out property <int> selected-index: -1;
+    in-out property <bool> is-editing-year: false;
+
+    in property <[[int]]> date-cells: [
+        [29, 30, 1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10, 11, 12],
+        [13, 14, 15, 16, 17, 18, 19],
+        [20, 21, 22, 23, 24, 25, 26],
+        [27, 28, 29, 30, 31, 1, 2],
+    ];
+
+    callback date-selected(day: int);
+    callback set-year(year: int);
+    callback enter-year-edit-mode();
+
+    width: Math.max(vbox.preferred-width, vbox.preferred-height);
+    height: self.width;
+    background: Theme.base-background;
+
+    vbox := VerticalLayout {
+        padding: Theme.padding * 4;
+        spacing: Theme.spacing * 4;
+        alignment: LayoutAlignment.start;
+
+        HorizontalLayout {
+            alignment: center;
+            spacing: Theme.spacing * 4;
+
+            IconBtn {
+                icon: Icons.arrow-left;
+
+                clicked => {
+                    if (current-month == 1) {
+                        current-year -= 1;
+                        current-month = 12;
+                    } else {
+                        current-month = current-month - 1;
+                    }
+                }
+            }
+
+            Label {
+                private property <string> month: current-month < 10 ? "0" + current-month : "" + current-month;
+                private property <string> day: current-day < 10 ? "0" + current-day : "" + current-day;
+
+                text: current-year + "-" + month + "-" + current-day;
+                color: Theme.primary-text-color;
+                font-size: Theme.title1-font-size;
+                font-weight: Theme.bold-font-weight;
+            }
+
+            IconBtn {
+                icon: Icons.arrow-right;
+
+                clicked => {
+                    if (current-month == 12) {
+                        current-year += 1;
+                        current-month = 1;
+                    } else {
+                        current-month = current-month + 1;
+                    }
+                }
+                visible: !root.is-editing-year;
+            }
+        }
+
+        VerticalLayout {
+            spacing: Theme.spacing * 3;
+
+            private property <length> cell-size;
+            private property <int> month-start-index: 0;
+            private property <int> month-end-index: 35;
+            private property <int> cache-cell-value: 0;
+            private property <[string]> day-names: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+            HorizontalLayout {
+                alignment: LayoutAlignment.center;
+                spacing: Theme.spacing * 3;
+
+                for day-name[i] in day-names: Rectangle {
+                    width: cell-size;
+
+                    Label {
+                        init => {
+                            cell-size = Math.max(cell-size, self.preferred-width + Theme.padding * 2);
+                        }
+
+                        text: day-name;
+                        font-weight: Theme.bold-font-weight;
+                    }
+                }
+            }
+
+            for week-cells[week-index] in root.date-cells: HorizontalLayout {
+                spacing: Theme.spacing * 3;
+                alignment: LayoutAlignment.center;
+
+                for cell-value[day-index] in week-cells: DateCell {
+                    init => {
+                        if (cache-cell-value > 0) {
+                            if (week-index * 7 + day-index < 20) {
+                                if (cell-value < cache-cell-value) {
+                                    month-start-index = week-index * 7 + day-index;
+                                }
+                            } else {
+                                if (cell-value < cache-cell-value) {
+                                    month-end-index = week-index * 7 + day-index;
+                                }
+                            }
+                        }
+                        cache-cell-value = cell-value;
+                    }
+
+                    cell-size: cell-size;
+                    cell-value: cell-value;
+                    cell-index: week-index * 7 + day-index;
+                    selected-index: selected-index;
+                    is-not-in-month: self.cell-index < month-start-index || self.cell-index >= month-end-index;
+
+                    clicked() => {
+                        root.selected-index = self.cell-index;
+                    }
+                }
+            }
+        }
+    }
+}

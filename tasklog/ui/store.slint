@@ -73,13 +73,13 @@ export global Store {
     in-out property <bool> is-show-landing-page: false;
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
-    in-out property <TabIndex> current-tab-index: TabIndex.Home;
+    in-out property <TabIndex> current-tab-index: TabIndex.Statistic;
     in-out property <PopupIndex> current-popup-index: PopupIndex.None;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";
     in-out property <SettingPreference> setting-preference: {
-        win-width: 600,
+        win-width: 550,
         win-height: 800,
         font-size: "16",
         font-family: "Source Han Sans CN",

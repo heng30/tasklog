@@ -31,7 +31,7 @@ export component TableHeader inherits Rectangle {
                 width: title-start-date-width;
 
                 TextBtnWithoutIcon {
-                    text: Logic.tr("START");
+                    text: Logic.tr("Start");
                     font-weight: Theme.bold-font-weight;
                     font-size: header-font-size;
                     hpadding: 0px;
@@ -63,7 +63,7 @@ export component TableHeader inherits Rectangle {
                 width: 30%;
 
                 TextBtnWithoutIcon {
-                    text: Logic.tr("GOAL");
+                    text: Logic.tr("Goal");
                     font-weight: Theme.bold-font-weight;
                     font-size: header-font-size;
                     hpadding: 0px;
@@ -160,12 +160,23 @@ export component TableBody inherits ListView {
                     overflow: elide;
                 }
 
-                VerticalLayout {
-                    alignment: LayoutAlignment.center;
+                HorizontalLayout {
+                    spacing: Theme.spacing * 2;
 
-                    FlashProgress {
-                        progress: calc-progress(entry.start-date, entry.end-date);
-                        finished-color: progress-color(entry.state);
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        fp := FlashProgress {
+                            progress: calc-progress(entry.start-date, entry.end-date);
+                            finished-color: progress-color(entry.state);
+                            is-stop: entry.state != RecordState.Unfinish;
+                        }
+                    }
+
+                    Label {
+                        vertical-alignment: center;
+                        text: fp.progress * 100 + "%";
+                        color: fp.finished-color;
                     }
                 }
 
