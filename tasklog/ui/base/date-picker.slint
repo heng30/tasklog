@@ -3,13 +3,14 @@ import { IconBtn } from "icon-btn.slint";
 import { Label } from "label.slint";
 
 component DateCell inherits Rectangle {
+    in-out property <int> current-year; // TODO
+    in-out property <int> current-month;
+    in-out property <int> current-day;
     in-out property <int> cell-value;
     in-out property <int> cell-index;
     in-out property <length> cell-size;
-    in-out property <int> selected-index;
     in-out property <bool> is-not-in-month;
-
-    private property <bool> is-selected: cell-index == selected-index;
+    in-out property <bool> is-selected;
 
     height: cell-size;
     width: cell-size;
@@ -28,10 +29,9 @@ component DateCell inherits Rectangle {
 
 export component DatePicker inherits Rectangle {
     in-out property <int> current-year: 1900;
-    in-out property <int> current-month: 05;
-    in-out property <int> current-day: 30;
+    in-out property <int> current-month: 5;
+    in-out property <int> current-day: 3;
     in-out property <int> selected-index: -1;
-    in-out property <bool> is-editing-year: false;
 
     in property <[[int]]> date-cells: [
         [29, 30, 1, 2, 3, 4, 5],
@@ -41,12 +41,41 @@ export component DatePicker inherits Rectangle {
         [27, 28, 29, 30, 31, 1, 2],
     ];
 
-    callback date-selected(day: int);
-    callback set-year(year: int);
-    callback enter-year-edit-mode();
+    function set-month-day(month: int, day: int) {
+        if (month > 12) {
+            current-year += 1;
+            current-month = 1;
+        } else if (month < 1) {
+            current-year -= 1;
+            current-month = 12;
+        } else {
+            current-month = month;
+        }
+
+        current-day = day;
+    }
+
+    function prev-month() {
+        if (current-month == 1) {
+            current-year -= 1;
+            current-month = 12;
+        } else {
+            current-month = current-month - 1;
+        }
+    }
+
+    function next-month() {
+        if (current-month == 12) {
+            current-year += 1;
+            current-month = 1;
+        } else {
+            current-month = current-month + 1;
+        }
+    }
 
     width: Math.max(vbox.preferred-width, vbox.preferred-height);
     height: self.width;
+    border-radius: Theme.border-radius;
     background: Theme.base-background;
 
     vbox := VerticalLayout {
@@ -62,12 +91,7 @@ export component DatePicker inherits Rectangle {
                 icon: Icons.arrow-left;
 
                 clicked => {
-                    if (current-month == 1) {
-                        current-year -= 1;
-                        current-month = 12;
-                    } else {
-                        current-month = current-month - 1;
-                    }
+                    prev-month();
                 }
             }
 
@@ -75,7 +99,7 @@ export component DatePicker inherits Rectangle {
                 private property <string> month: current-month < 10 ? "0" + current-month : "" + current-month;
                 private property <string> day: current-day < 10 ? "0" + current-day : "" + current-day;
 
-                text: current-year + "-" + month + "-" + current-day;
+                text: current-year + "-" + month + "-" + day;
                 color: Theme.primary-text-color;
                 font-size: Theme.title1-font-size;
                 font-weight: Theme.bold-font-weight;
@@ -85,14 +109,8 @@ export component DatePicker inherits Rectangle {
                 icon: Icons.arrow-right;
 
                 clicked => {
-                    if (current-month == 12) {
-                        current-year += 1;
-                        current-month = 1;
-                    } else {
-                        current-month = current-month + 1;
-                    }
+                    next-month();
                 }
-                visible: !root.is-editing-year;
             }
         }
 
@@ -136,7 +154,7 @@ export component DatePicker inherits Rectangle {
                                 }
                             } else {
                                 if (cell-value < cache-cell-value) {
-                                    month-end-index = week-index * 7 + day-index;
+                                    month-end-index = week-index * 7 + day-index - 1;
                                 }
                             }
                         }
@@ -146,11 +164,12 @@ export component DatePicker inherits Rectangle {
                     cell-size: cell-size;
                     cell-value: cell-value;
                     cell-index: week-index * 7 + day-index;
-                    selected-index: selected-index;
-                    is-not-in-month: self.cell-index < month-start-index || self.cell-index >= month-end-index;
+                    is-selected: cell-value == root.current-day;
+                    is-not-in-month: self.cell-index < month-start-index || self.cell-index > month-end-index;
 
                     clicked() => {
                         root.selected-index = self.cell-index;
+                        root.current-day = self.cell-value;
                     }
                 }
             }
