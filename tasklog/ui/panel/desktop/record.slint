@@ -2,7 +2,7 @@ import { ListView, DatePickerPopup } from "std-widgets.slint";
 
 import { RecordState, SortRecord } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus } from "../../base/widgets.slint";
 
 
 export component TableHeader inherits Rectangle {
@@ -13,13 +13,7 @@ export component TableHeader inherits Rectangle {
 
     background: Theme.table-header-color;
 
-    fs := FocusScope { }
-
-    TouchArea {
-        clicked => {
-            fs.focus();
-        }
-    }
+    GainFocus { }
 
     HorizontalLayout {
         padding-left: Theme.padding * 4;
@@ -135,9 +129,9 @@ export component TableBody inherits ListView {
         private property <bool> is-edit-title;
 
         Rectangle {
-            background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
+            background: (gf.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
 
-            ta := TouchArea { }
+            gf := GainFocus { }
 
             HorizontalLayout {
                 spacing: Theme.spacing * 4;
@@ -188,13 +182,14 @@ export component TableBody inherits ListView {
 }
 
 export component Record inherits VerticalLayout {
-    // padding-top: Theme.padding * 2;
     private property <length> title-start-date-width;
     private property <length> title-end-date-width;
 
     Rectangle {
         border-width: Theme.default-border-width;
         border-color: Theme.primary-text-color;
+
+        GainFocus { }
 
         VerticalLayout {
             padding: parent.border-width;
