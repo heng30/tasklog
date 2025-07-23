@@ -11,7 +11,7 @@ export component TableHeader inherits Rectangle {
 
     private property <length> header-font-size: Theme.title5-font-size;
 
-    background: Theme.thirdly-background.darker(Store.setting-preference.is-dark ? 50% : 20%);
+    background: Theme.table-header-color;
 
     fs := FocusScope { }
 
@@ -82,7 +82,7 @@ export component TableHeader inherits Rectangle {
         }
 
         HorizontalLayout {
-            spacing: Theme.spacing * 4;
+            spacing: Theme.spacing * 3;
             padding-left: Theme.padding * 4;
 
             HorizontalLayout {
@@ -135,7 +135,7 @@ export component TableBody inherits ListView {
         private property <bool> is-edit-title;
 
         Rectangle {
-            background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 1 ? Theme.hover-background : Colors.transparent);
+            background: (ta.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
 
             ta := TouchArea { }
 

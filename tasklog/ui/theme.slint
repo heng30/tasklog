@@ -67,6 +67,10 @@ export global Theme {
     out property <color> have-read-text-color: is-dark ? #555555 : #606060;
     out property <color> link-text-color: is-dark ? #4B60D8 : #3F51FF;
 
+    out property <color> table-header-color: is-dark ? thirdly-background.darker(50%) : thirdly-background.brighter(2%);
+    out property <color> table-item-light-color: Colors.transparent;
+    out property <color> table-item-dark-color: is-dark ? hover-background : hover-background.brighter(2%);
+
     out property <[color]> tag-colors: is-dark ? [#A3B3CC, #94C2AF, #9AC0C4, #B2ACCA, #CCA8A3, #CAA6BC, #A8C085, #B0B2B6] : [#CCE0FF, #BAF3DB, #C1F0F5, #DFD8FD, #FFD2CC, #FDD0EC, #D3F1A7, #DCDFE4];
 
     out property <float> golden-ratio: 0.618;
