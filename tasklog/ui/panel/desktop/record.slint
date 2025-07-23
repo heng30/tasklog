@@ -2,14 +2,24 @@ import { ListView, DatePickerPopup } from "std-widgets.slint";
 
 import { RecordState, SortRecord } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { LineInput, Label, IconBtn, FlashProgress, ConfirmBtn } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon } from "../../base/widgets.slint";
 
 
 export component TableHeader inherits Rectangle {
     in-out property <length> title-start-date-width;
     in-out property <length> title-end-date-width;
 
+    private property <length> header-font-size: Theme.title5-font-size;
+
     background: Theme.thirdly-background.darker(Store.setting-preference.is-dark ? 50% : 20%);
+
+    fs := FocusScope { }
+
+    TouchArea {
+        clicked => {
+            fs.focus();
+        }
+    }
 
     HorizontalLayout {
         padding-left: Theme.padding * 4;
@@ -22,42 +32,48 @@ export component TableHeader inherits Rectangle {
             alignment: LayoutAlignment.start;
             spacing: Theme.spacing * 4;
 
-            title-start-date := Label {
+            title-start-date := VerticalLayout {
+                alignment: LayoutAlignment.center;
                 width: title-start-date-width;
-                text: Logic.tr("START");
-                font-weight: Theme.bold-font-weight;
-                font-size: Theme.title3-font-size;
 
-                TouchArea {
-                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                TextBtnWithoutIcon {
+                    text: Logic.tr("START");
+                    font-weight: Theme.bold-font-weight;
+                    font-size: header-font-size;
+                    hpadding: 0px;
+
                     clicked => {
                         Logic.sort-record(SortRecord.Start);
                     }
                 }
             }
 
-            title-end-date := Label {
+            title-end-date := VerticalLayout {
+                alignment: LayoutAlignment.center;
                 width: title-end-date-width;
-                text: Logic.tr("END");
-                font-weight: Theme.bold-font-weight;
-                font-size: Theme.title3-font-size;
 
-                TouchArea {
-                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                TextBtnWithoutIcon {
+                    text: Logic.tr("End");
+                    font-weight: Theme.bold-font-weight;
+                    font-size: header-font-size;
+                    hpadding: 0px;
+
                     clicked => {
                         Logic.sort-record(SortRecord.End);
                     }
                 }
             }
 
-            title-goal := Label {
+            title-goal := VerticalLayout {
+                alignment: LayoutAlignment.center;
                 width: 30%;
-                text: Logic.tr("GOAL");
-                font-weight: Theme.bold-font-weight;
-                font-size: Theme.title3-font-size;
 
-                TouchArea {
-                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                TextBtnWithoutIcon {
+                    text: Logic.tr("GOAL");
+                    font-weight: Theme.bold-font-weight;
+                    font-size: header-font-size;
+                    hpadding: 0px;
+
                     clicked => {
                         Logic.sort-record(SortRecord.Goal);
                     }
@@ -66,10 +82,25 @@ export component TableHeader inherits Rectangle {
         }
 
         HorizontalLayout {
-            padding-right: Theme.padding * 2;
-            ConfirmBtn {
-                icon: Icons.add-small;
-                text: Logic.tr("New");
+            spacing: Theme.spacing * 4;
+            padding-left: Theme.padding * 4;
+
+            HorizontalLayout {
+                search := Search {
+                    gain-focus-when-clicked: false;
+
+                    search(text) => {
+                        Logic.search-record(text);
+                    }
+
+                    edited(text) => {
+                        Logic.search-record(text);
+                    }
+                }
+            }
+
+            IconBtn {
+                icon: Icons.add-light;
                 clicked => {
                     Logic.add-record();
                 }
