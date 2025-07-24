@@ -40,6 +40,7 @@ export global Util {
     pure callback format_number_with_commas(num-str: string) -> string;
     pure callback split-and-join-string(input: string, length: int, sep: string) -> string;
 
+    pure callback get-current-date() -> Date;
     pure callback upate-date-picker(year: int, month: int) -> [[Date]];
 
     public pure function text-color(status: ToastStatus) -> color {

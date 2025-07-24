@@ -127,6 +127,13 @@ pub fn tr(text: &str) -> String {
         ("Window height", "窗口高度"),
         ("Window size", "窗口大小"),
         ("Window width", "窗口宽度"),
+        ("Sun", "  日  "),
+        ("Mon", "  一  "),
+        ("Tue", "  二  "),
+        ("Wed", "  三  "),
+        ("Thu", "  四  "),
+        ("Fri", "  五  "),
+        ("Sat", "  六  "),
     ]);
 
     if let Some(txt) = items.get(text) {

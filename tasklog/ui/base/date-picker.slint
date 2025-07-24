@@ -4,6 +4,8 @@ import { IconBtn } from "icon-btn.slint";
 import { Label } from "label.slint";
 import { Date } from "def.slint";
 import { LineInput } from "line-input.slint";
+import { Logic } from "../logic.slint";
+import { CancelBtn, ConfirmBtn } from "btn.slint";
 
 component DateCell inherits Rectangle {
     in-out property <Date> date;
@@ -24,6 +26,7 @@ component DateCell inherits Rectangle {
     Label {
         text: date.day;
         color: is-selected || ta.has-hover ? Theme.light-text-color : Theme.regular-text-color;
+        font-weight: Theme.bold-font-weight;
     }
 }
 
@@ -78,9 +81,24 @@ export component DatePicker inherits Rectangle {
             { year: 1990, month: 7, day: 2, main-month: 6 },
             { year: 1990, month: 7, day: 3, main-month: 6 },
         ],
+        [
+            { year: 1990, month: 7, day: 4, main-month: 6 },
+            { year: 1990, month: 7, day: 5, main-month: 6 },
+            { year: 1990, month: 7, day: 6, main-month: 6 },
+            { year: 1990, month: 7, day: 7, main-month: 6 },
+            { year: 1990, month: 7, day: 8, main-month: 6 },
+            { year: 1990, month: 7, day: 9, main-month: 6 },
+            { year: 1990, month: 7, day: 10, main-month: 6 },
+        ],
     ];
 
+    callback canceled();
+    callback confirmed(date: Date);
+
     function set-date(date: Date) {
+        if (current-year != date.year || current-month != date.month) {
+            date-cells = Util.upate-date-picker(date.year, date.month);
+        }
         current-year = date.year;
         current-month = date.month;
         current-day = date.day;
@@ -93,6 +111,8 @@ export component DatePicker inherits Rectangle {
         } else {
             current-month = current-month - 1;
         }
+
+        date-cells = Util.upate-date-picker(current-year, current-month);
     }
 
     function next-month() {
@@ -102,15 +122,23 @@ export component DatePicker inherits Rectangle {
         } else {
             current-month = current-month + 1;
         }
+
+        date-cells = Util.upate-date-picker(current-year, current-month);
     }
 
-    width: Math.max(vbox.preferred-width, vbox.preferred-height);
-    height: self.width;
+    init => {
+        set-date(Util.get-current-date());
+    }
+
+    width: vbox.preferred-width;
+    height: vbox.preferred-height;
     border-radius: Theme.border-radius;
     background: Theme.base-background;
 
     vbox := VerticalLayout {
         padding: Theme.padding * 4;
+        padding-left: Theme.padding * 8;
+        padding-right: Theme.padding * 8;
         spacing: Theme.spacing * 4;
         alignment: LayoutAlignment.start;
 
@@ -123,14 +151,13 @@ export component DatePicker inherits Rectangle {
 
                 clicked => {
                     prev-month();
-                    date-cells = Util.upate-date-picker(current-year, current-month);
                 }
             }
 
             HorizontalLayout {
                 private property <string> month: current-month < 10 ? "0" + current-month : "" + current-month;
                 private property <string> day: current-day < 10 ? "0" + current-day : "" + current-day;
-                private property <bool> is-edit: true;
+                private property <bool> is-edit;
 
                 if !is-edit: Label {
                     text: current-year + "-" + month + "-" + day;
@@ -139,6 +166,8 @@ export component DatePicker inherits Rectangle {
                     font-weight: Theme.bold-font-weight;
 
                     TouchArea {
+                        mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+
                         clicked => {
                             is-edit = true;
                         }
@@ -152,7 +181,6 @@ export component DatePicker inherits Rectangle {
                         }
                         is-edit = false;
                         set-date({ year: year-li.text.to-float(), month: month-li.text.to-float(), day: current-day });
-                        date-cells = Util.upate-date-picker(current-year, current-month);
                     }
 
                     year-li := LineInput {
@@ -189,7 +217,6 @@ export component DatePicker inherits Rectangle {
 
                 clicked => {
                     next-month();
-                    date-cells = Util.upate-date-picker(current-year, current-month);
                 }
             }
         }
@@ -198,22 +225,29 @@ export component DatePicker inherits Rectangle {
             spacing: Theme.spacing * 3;
 
             private property <length> cell-size;
-            private property <[string]> day-names: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            private property <[string]> day-names: [
+                Logic.tr("Sun"),
+                Logic.tr("Mon"),
+                Logic.tr("Tue"),
+                Logic.tr("Wed"),
+                Logic.tr("Thu"),
+                Logic.tr("Fri"),
+                Logic.tr("Sat"),
+            ];
 
-            HorizontalLayout {
+            day-names-hbox := HorizontalLayout {
                 alignment: LayoutAlignment.center;
                 spacing: Theme.spacing * 3;
 
-                for day-name[i] in day-names: Rectangle {
+                for day-name[index] in day-names: Rectangle {
                     width: cell-size;
 
                     Label {
                         init => {
-                            cell-size = Math.max(cell-size, self.preferred-width + Theme.padding * 2);
+                            cell-size = Math.max(cell-size, self.preferred-width + Theme.padding * 3);
                         }
 
                         text: day-name;
-                        font-weight: Theme.bold-font-weight;
                     }
                 }
             }
@@ -229,6 +263,34 @@ export component DatePicker inherits Rectangle {
 
                     clicked() => {
                         set-date(self.date);
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                alignment: end;
+                spacing: Theme.spacing * 8;
+
+                CancelBtn {
+                    text: Logic.tr("Cancel");
+                    icon: Icons.cancel;
+
+                    clicked => {
+                        root.canceled()
+                    }
+                }
+
+                ConfirmBtn {
+                    icon: Icons.success;
+                    text: Logic.tr("Confirm");
+
+                    clicked => {
+                        root.confirmed({
+                            year: current-year,
+                            month: current-month,
+                            day: current-day,
+                            main-month: current-month,
+                        });
                     }
                 }
             }

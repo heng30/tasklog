@@ -40,8 +40,7 @@ mod toast;
 mod tr;
 
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-mod examples;
-
+// mod examples;
 #[cfg(target_arch = "wasm32")]
 mod examples_web;
 
@@ -65,8 +64,7 @@ pub fn init(ui: &AppWindow) {
 
     {
         #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-        examples::init(ui);
-
+        // examples::init(ui);
         #[cfg(target_arch = "wasm32")]
         examples_web::init(ui);
     }
