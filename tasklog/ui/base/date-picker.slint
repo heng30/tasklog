@@ -7,6 +7,14 @@ import { LineInput } from "line-input.slint";
 import { Logic } from "../logic.slint";
 import { CancelBtn, ConfirmBtn } from "btn.slint";
 
+// Eample
+// DatePicker {
+//     canceled => {}
+//     confirmed(date) => {
+//        debug(date);
+//     }
+// }
+
 component DateCell inherits Rectangle {
     in-out property <Date> date;
     in-out property <length> cell-size;
@@ -21,7 +29,9 @@ component DateCell inherits Rectangle {
     border-radius: Theme.border-radius;
     background: ta.has-hover ? Theme.thirdly-brand-color : (is-selected ? Theme.thirdly-brand-color : (is-not-in-month ? Colors.transparent : Theme.hover-background));
 
-    ta := TouchArea { }
+    ta := TouchArea {
+        mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+    }
 
     Label {
         text: date.day;
@@ -35,7 +45,9 @@ export component DatePicker inherits Rectangle {
     in-out property <int> current-month: 6;
     in-out property <int> current-day: 3;
 
-    in-out property <[[Date]]> date-cells: [
+    in-out property <[[Date]]> date-cells;
+
+    private property <[[Date]]> cache-date-cells: [
         [
             { year: 1989, month: 5, day: 29, main-month: 6 },
             { year: 1989, month: 5, day: 30, main-month: 6 },
@@ -128,6 +140,10 @@ export component DatePicker inherits Rectangle {
 
     init => {
         set-date(Util.get-current-date());
+
+        if (date-cells.length == 0) {
+            date-cells = cache-date-cells;
+        }
     }
 
     width: vbox.preferred-width;
@@ -186,7 +202,7 @@ export component DatePicker inherits Rectangle {
                     year-li := LineInput {
                         text: current-year;
                         width: self.font-size * 4;
-                        is-show-icon: false;
+                        input-type: InputType.number;
 
                         accepted => {
                             update-edit-date()
@@ -200,7 +216,8 @@ export component DatePicker inherits Rectangle {
                     month-li := LineInput {
                         text: month;
                         width: self.font-size * 3;
-                        is-show-icon: false;
+                        input-type: InputType.number;
+
                         accepted => {
                             update-edit-date()
                         }
@@ -269,7 +286,7 @@ export component DatePicker inherits Rectangle {
 
             HorizontalLayout {
                 alignment: end;
-                spacing: Theme.spacing * 8;
+                spacing: Theme.spacing * 4;
 
                 CancelBtn {
                     text: Logic.tr("Cancel");
@@ -294,6 +311,25 @@ export component DatePicker inherits Rectangle {
                     }
                 }
             }
+        }
+    }
+}
+
+export component DatePickerPopup inherits PopupWindow {
+    callback confirmed(date: Date);
+
+    width: dp.width;
+    height: dp.height;
+    close-policy: PopupClosePolicy.close-on-click-outside;
+
+    dp := DatePicker {
+        canceled => {
+            root.close();
+        }
+
+        confirmed(date) => {
+            root.close();
+            root.confirmed(date);
         }
     }
 }
