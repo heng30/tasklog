@@ -147,12 +147,12 @@ export component DatePicker inherits Rectangle {
 
                 if is-edit: HorizontalLayout {
                     function update-edit-date() {
+                        if (year-li.text.to-float() < 1 || month-li.text.to-float() < 1 || month-li.text.to-float() > 12) {
+                            return;
+                        }
                         is-edit = false;
-                        set-date({
-                            year: year-li.text.to-float(),
-                            month: month-li.text.to-float(),
-                            day: day-li.text.to-float(),
-                        });
+                        set-date({ year: year-li.text.to-float(), month: month-li.text.to-float(), day: current-day });
+                        date-cells = Util.upate-date-picker(current-year, current-month);
                     }
 
                     year-li := LineInput {
@@ -179,16 +179,7 @@ export component DatePicker inherits Rectangle {
                     }
 
                     Label {
-                        text: " - ";
-                    }
-
-                    day-li := LineInput {
-                        text: day;
-                        width: self.font-size * 3;
-                        is-show-icon: false;
-                        accepted => {
-                            update-edit-date()
-                        }
+                        text: " - " + day;
                     }
                 }
             }
