@@ -1,5 +1,5 @@
 import { Theme, Icons } from "theme.slint";
-import { ToastStatus, AppPosType, TreeEntry, MediaControlStatus } from "./base/def.slint";
+import { ToastStatus, AppPosType, TreeEntry, MediaControlStatus, Date } from "./base/def.slint";
 
 export global Util {
     callback hide-window();
@@ -39,6 +39,8 @@ export global Util {
     pure callback local-now(format: string) -> string;
     pure callback format_number_with_commas(num-str: string) -> string;
     pure callback split-and-join-string(input: string, length: int, sep: string) -> string;
+
+    pure callback upate-date-picker(year: int, month: int) -> [[Date]];
 
     public pure function text-color(status: ToastStatus) -> color {
         if (status == ToastStatus.Success) {
