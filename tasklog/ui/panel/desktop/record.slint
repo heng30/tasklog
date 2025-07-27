@@ -1,113 +1,32 @@
 import { ListView, DatePickerPopup } from "std-widgets.slint";
 
-import { RecordState, SortRecord } from "../../store.slint";
+import { RecordState, SortRecord, RecordEntry } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider } from "../../base/widgets.slint";
 
+component TaskCard inherits Rectangle {
+    in-out property <RecordEntry> entry;
 
-export component TableHeader inherits Rectangle {
-    in-out property <length> title-start-date-width;
-    in-out property <length> title-end-date-width;
+    width: vbox.preferred-width;
+    height: vbox.preferred-height;
+    background: Theme.secondary-background;
+    border-radius: Theme.border-radius * 2;
+    border-color: ta.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
+    border-width: Theme.default-border-width;
+    drop-shadow-blur: Theme.padding * 2;
+    drop-shadow-color: self.border-color;
 
-    private property <length> header-font-size: Theme.title5-font-size;
+    ta := TouchArea { }
 
-    background: Theme.table-header-color;
-
-    GainFocus { }
-
-    HorizontalLayout {
-        padding-left: Theme.padding * 4;
-        padding-right: Theme.padding * 4;
-        padding-top: Theme.padding * 3;
-        padding-bottom: Theme.padding * 3;
-        alignment: LayoutAlignment.space-between;
-
-        HorizontalLayout {
-            alignment: LayoutAlignment.start;
-            spacing: Theme.spacing * 4;
-
-            title-start-date := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: title-start-date-width;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("Start");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.Start);
-                    }
-                }
-            }
-
-            title-end-date := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: title-end-date-width;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("End");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.End);
-                    }
-                }
-            }
-
-            title-goal := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: 30%;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("Goal");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.Goal);
-                    }
-                }
-            }
-        }
-
-        HorizontalLayout {
-            spacing: Theme.spacing * 3;
-            padding-left: Theme.padding * 4;
-
-            HorizontalLayout {
-                search := Search {
-                    gain-focus-when-clicked: false;
-
-                    search(text) => {
-                        Logic.search-record(text);
-                    }
-
-                    edited(text) => {
-                        Logic.search-record(text);
-                    }
-                }
-            }
-
-            IconBtn {
-                icon: Icons.add-light;
-                clicked => {
-                    Logic.add-record();
-                }
-            }
-        }
+    function remain-days(start-date: string, end-date: string) -> int {
+        return 12;
     }
-}
 
-export component TableBody inherits ListView {
-    in-out property <length> title-start-date-width;
-    in-out property <length> title-end-date-width;
+    function calc-progress(start-date: string, end-date: string) -> float {
+        return 0.5;
+    }
 
-    function progress-color(state: RecordState) -> color {
+    function state-color(state: RecordState) -> color {
         if (state == RecordState.Unfinish) {
             return Theme.thirdly-brand-color;
         } else if (state == RecordState.Finished) {
@@ -119,137 +38,82 @@ export component TableBody inherits ListView {
         }
     }
 
-    // TODO
-    function calc-progress(start-date: string, end-date: string) -> float {
-        return 0.5;
-    }
+    vbox := VerticalLayout {
+        padding: Theme.padding * 4;
 
-    for entry[index] in Store.record-entries: vbox := VerticalLayout {
-        private property <bool> is-hover;
-        private property <bool> is-edit-title;
-
-        Rectangle {
-            background: (gf.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
-
-            gf := GainFocus { }
+        num-hbox := HorizontalLayout {
+            width: Theme.icon-size * 12;
+            alignment: LayoutAlignment.center;
 
             HorizontalLayout {
-                spacing: Theme.spacing * 4;
-                padding-left: Theme.padding * 4;
-                padding-right: Theme.padding * 4;
-                padding-top: Theme.padding * 3;
-                padding-bottom: Theme.padding * 3;
+                alignment: LayoutAlignment.center;
+
+                led-number := HorizontalLedNumber {
+                    number-spacing: Theme.spacing * 4;
+                    number-padding: Theme.padding * 4;
+                    number-size: Theme.icon-size * 2;
+                    colorize: state-color(entry.state);
+                    numbers: [4, 5];
+                }
+            }
+
+            VerticalLayout {
+                alignment: LayoutAlignment.end;
+                padding-bottom: Theme.padding * 4;
 
                 Label {
-                    init => {
-                        title-start-date-width = self.preferred-width;
-                    }
-                    text: entry.start-date;
+                    text: Logic.tr("days");
+                    color: Theme.placeholder-text-color;
                 }
+            }
+        }
 
-                Label {
-                    init => {
-                        title-end-date-width = self.preferred-width;
-                    }
-                    text: entry.end-date;
-                }
+        Divider {
+            height: Theme.default-border-width * 2;
+        }
 
-                Label {
-                    width: 30%;
-                    text: entry.title;
-                    overflow: elide;
-                }
+        HorizontalLayout {
+            padding-top: Theme.padding * 2;
 
-                HorizontalLayout {
-                    spacing: Theme.spacing * 2;
+            Label {
+                width: num-hbox.width;
+                font-size: Theme.title3-font-size;
+                font-weight: Theme.bold-font-weight;
+                wrap: word-wrap;
+                text: entry.title;
+            }
+        }
 
-                    VerticalLayout {
-                        alignment: LayoutAlignment.center;
+        HorizontalLayout {
+            padding-top: Theme.padding * 4;
+            alignment: LayoutAlignment.end;
 
-                        fp := FlashProgress {
-                            progress: calc-progress(entry.start-date, entry.end-date);
-                            finished-color: progress-color(entry.state);
-                            is-stop: entry.state != RecordState.Unfinish;
-                        }
-                    }
-
-                    Label {
-                        vertical-alignment: center;
-                        text: fp.progress * 100 + "%";
-                        color: fp.finished-color;
-                    }
-                }
-
-                IconBtn {
-                    icon: Icons.more-v;
-                    show-icon-hover-background: false;
-
-                    clicked => {
-                    }
-                }
+            Label {
+                text: Logic.tr("Ends on ") + entry.end-date;
+                color: Theme.placeholder-text-color;
             }
         }
     }
 }
 
-export component Record inherits VerticalLayout {
-    private property <length> title-start-date-width;
-    private property <length> title-end-date-width;
+export component Record inherits ListView {
+    private property <int> column-counts: 2;
+    private property <int> row-counts: Math.ceil(Store.record-entries.length / column-counts);
 
-    Rectangle {
-        border-width: Theme.default-border-width;
-        border-color: Theme.primary-text-color;
+    for row-index in row-counts: VerticalLayout {
+        padding: Theme.padding * 4;
 
-        GainFocus { }
+        HorizontalLayout {
+            spacing: Theme.spacing * 8;
+            // alignment: LayoutAlignment.space-around;
 
-        VerticalLayout {
-            padding: parent.border-width;
+            for column-index in column-counts: TaskCard {
+                private property <int> current-index: row-index * column-counts + column-index;
+                private property <bool> is-show-card: current-index < Store.record-entries.length;
 
-            TableHeader {
-                title-start-date-width: title-start-date-width;
-                title-end-date-width: title-end-date-width;
-            }
-
-            TableBody {
-                changed title-start-date-width => {
-                    root.title-end-date-width = self.title-end-date-width;
-                }
-
-                changed title-end-date-width => {
-                    root.title-start-date-width = self.title-start-date-width;
-                }
+                visible: is-show-card;
+                entry: Store.record-entries[ is-show-card ? current-index : 0];
             }
         }
     }
 }
-
-    // date-picker := DatePickerPopup {
-    //     x: (root.width - self.width) / 2;
-    //     y: (root.height - self.height) / 2;
-    //     close-policy: PopupClosePolicy.close-on-click-outside;
-    //
-    //     accepted(date) => {
-    //         debug(date.year + "-" + date.month + "-" + date.day);
-    //         self.close();
-    //     }
-    //     canceled => {
-    //         self.close();
-    //     }
-    // }
-
-                    // if is-edit-title: LineInput {
-                    //     // width: Math.min(parent.width * 30%, self.preferred-width);
-                    //     width: 30%;
-                    //     text: entry.title;
-                    //     is-show-icon: true;
-                    //     icon: Icons.checked-box;
-                    //
-                    //     accepted => {
-                    //         is-edit-title = false;
-                    //     }
-                    //
-                    //     clicked => {
-                    //         is-edit-title = false;
-                    //     }
-                    // }
-

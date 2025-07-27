@@ -30,7 +30,7 @@ export component HorizontalLedNumber inherits Rectangle {
 
         for number in numbers: Image {
             width: number == 1 ? number1-width : number-size;
-            height: number-size / Theme.golden-ratio;
+            height: number-size * 2;
             colorize: colorize;
             source: images[number];
         }
@@ -70,7 +70,7 @@ export component VerticalLedNumber inherits Rectangle {
 
             Image {
                 width: number == 1 ? number1-width : number-size;
-                height: number-size / Theme.golden-ratio;
+                height: number-size * 2;
                 colorize: colorize;
                 source: images[number];
             }
