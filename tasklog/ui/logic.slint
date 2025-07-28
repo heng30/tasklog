@@ -1,4 +1,4 @@
-import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, SortRecord } from "store.slint";
+import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, SortRecord, RecordState } from "store.slint";
 
 import { SideBarEntry } from "base/def.slint";
 
@@ -53,8 +53,9 @@ export global Logic {
     //////////////////////////////// Logic Start  ////////////////////////////////
 
     callback add-record();
-    callback sort-record(ty: SortRecord);
-    callback search-record(keyword: string);
+    // callback sort-record(ty: SortRecord);
+    // callback search-record(keyword: string);
+    callback update-task-state(state: RecordState);
 
     //////////////////////////////// Logic End  ////////////////////////////////
 }

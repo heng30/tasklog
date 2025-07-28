@@ -50,7 +50,7 @@ export enum SortRecord {
 }
 
 export enum RecordState {
-    Unfinish,
+    Unfinished,
     Finished,
     Giveup,
     Timeout,
@@ -87,7 +87,7 @@ export global Store {
         language: "en",
         always-on-top: false,
         no-frame: true,
-        is-dark: true,
+        is-dark: false,
     };
 
     //////////////////////////////// Logic Start ////////////////////////////////
@@ -99,7 +99,7 @@ export global Store {
             end-date: "2025-03-02",
             title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
             plan: "A simple plane",
-            state: RecordState.Unfinish,
+            state: RecordState.Unfinished,
             tags: ["Study", "Project", "人物"],
         },
         {
@@ -109,6 +109,7 @@ export global Store {
             title: "Study Deep Learning. goode",
             plan: "A simple plane",
             state: RecordState.Finished,
+            tags: ["Project", "人物"],
         },
         {
             uuid: "uuid-3",
@@ -117,6 +118,7 @@ export global Store {
             title: "中文成为是及时好喝吗节混合论文",
             plan: "A simple plane",
             state: RecordState.Giveup,
+            tags: ["人物"],
         },
         {
             uuid: "uuid-4",

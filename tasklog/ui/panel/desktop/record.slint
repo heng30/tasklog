@@ -7,23 +7,7 @@ import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWi
 component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
 
-    x: ta.has-hover ? -Theme.padding / 2 : 0;
-    y: ta.has-hover ? -Theme.padding / 2 : 0;
-    width: vbox.preferred-width + (ta.has-hover ? Theme.padding : 0);
-    height: vbox.preferred-height + (ta.has-hover ? Theme.padding : 0);
-    background: Theme.secondary-background;
-    border-radius: Theme.border-radius * 2;
-    border-color: ta.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
-    border-width: Theme.default-border-width;
-    drop-shadow-blur: Theme.padding * 2;
-    drop-shadow-color: self.border-color;
-
-    animate x, y, width, height {
-        duration: Theme.default-animate-duration;
-        easing: ease-in-out;
-    }
-
-    ta := TouchArea { }
+    private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
 
     function remain-days(start-date: string, end-date: string) -> [int] {
         return [4, 5];
@@ -34,7 +18,7 @@ component TaskCard inherits Rectangle {
     }
 
     function state-color(state: RecordState) -> color {
-        if (state == RecordState.Unfinish) {
+        if (state == RecordState.Unfinished) {
             return Theme.thirdly-brand-color;
         } else if (state == RecordState.Finished) {
             return Theme.success-color;
@@ -46,14 +30,58 @@ component TaskCard inherits Rectangle {
     }
 
     function state-str(state: RecordState) -> string {
-        if (state == RecordState.Unfinish) {
-            return Logic.tr("Unfinish");
+        if (state == RecordState.Unfinished) {
+            return Logic.tr("Unfinished");
         } else if (state == RecordState.Finished) {
             return Logic.tr("Finished");
         } else if (state == RecordState.Giveup) {
             return Logic.tr("Giveup");
         } else {
             return Logic.tr("Timeout");
+        }
+    }
+
+    width: vbox.preferred-width;
+    height: vbox.preferred-height;
+    background: Theme.secondary-background;
+    border-radius: Theme.border-radius * 2;
+    border-color: root.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
+    border-width: Theme.default-border-width;
+    drop-shadow-blur: Theme.padding * 2;
+    drop-shadow-color: self.border-color;
+
+    states [
+        zoom-in when root.has-hover: {
+            x: -Theme.padding / 2;
+            y: -Theme.padding / 2;
+            width: vbox.preferred-width + Theme.padding;
+            height: vbox.preferred-height + Theme.padding;
+            in {
+                animate x, y, width, height { duration: Theme.default-animate-duration; }
+            }
+            out {
+                animate x, y, width, height { duration: Theme.default-animate-duration; }
+            }
+        }
+        zoom-out when !root.has-hover: {
+            x: 0;
+            y: 0;
+            width: vbox.preferred-width;
+            height: vbox.preferred-height;
+        }
+    ]
+
+    ta := TouchArea { }
+
+    more-icon := IconBtn {
+        x: root.width - self.width - Theme.padding * 4;
+        y: Theme.padding * 4;
+        width: Theme.icon-size;
+        height: self.width;
+        icon: Icons.more-v;
+
+        clicked => {
+           // TODO
         }
     }
 
@@ -113,7 +141,7 @@ component TaskCard inherits Rectangle {
 
             for index in 3: Tag {
                 visible: !self.text.is-empty;
-                text: index == 0 ? state-str(entry.state) : (entry.tags.length >= 1 ? entry.tags[0] : (entry.tags.length >= 2 ? entry.tags[1] : ""));
+                text: index == 0 && entry.tags.length >= 1 ? entry.tags[index] : (entry.tags.length >= 2 && index == 1 ? entry.tags[index] : (entry.tags.length >= 3 && index == 2 ? entry.tags[index] : ""));
                 background: Theme.tag-colors[index];
                 hpadding: Theme.padding * 2;
                 text-color: self.background.darker(150%);
@@ -121,8 +149,18 @@ component TaskCard inherits Rectangle {
         }
 
         HorizontalLayout {
-            alignment: LayoutAlignment.end;
+            alignment: LayoutAlignment.space-between;
             padding-top: Theme.padding * 4;
+
+            state-btn := TextBtnWithoutIcon {
+                text: state-str(entry.state);
+                text-color: led-number.colorize;
+                font-weight: Theme.bold-font-weight;
+
+                clicked => {
+                    Logic.update-task-state(RecordState.Finished);
+                }
+            }
 
             Label {
                 text: Logic.tr("Ends on ") + entry.end-date;
@@ -141,7 +179,6 @@ export component Record inherits ListView {
 
         HorizontalLayout {
             spacing: Theme.spacing * 8;
-            // alignment: LayoutAlignment.space-around;
 
             for column-index in column-counts: Rectangle {
                 width: tc.width;
