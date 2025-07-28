@@ -159,6 +159,7 @@ export component DesktopPanel inherits Rectangle {
 
     VerticalLayout {
         if Store.setting-preference.no-frame: HorizontalStatusBar {
+            disable-maximal: true;
             init => {
                 root.home-height = root.height - self.preferred-height;
             }

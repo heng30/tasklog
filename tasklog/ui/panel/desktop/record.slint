@@ -2,7 +2,7 @@ import { ListView, DatePickerPopup } from "std-widgets.slint";
 
 import { RecordState, SortRecord, RecordEntry } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress } from "../../base/widgets.slint";
 
 component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
@@ -29,7 +29,7 @@ component TaskCard inherits Rectangle {
         }
     }
 
-    function state-str(state: RecordState) -> string {
+    function state-to-str(state: RecordState) -> string {
         if (state == RecordState.Unfinished) {
             return Logic.tr("Unfinished");
         } else if (state == RecordState.Finished) {
@@ -38,6 +38,18 @@ component TaskCard inherits Rectangle {
             return Logic.tr("Giveup");
         } else {
             return Logic.tr("Timeout");
+        }
+    }
+
+    function str-to-state(state: string) -> RecordState {
+        if (state == Logic.tr("Unfinished")) {
+            return RecordState.Unfinished;
+        } else if (state == Logic.tr("Finished")) {
+            return RecordState.Finished;
+        } else if (state == Logic.tr("Giveup")) {
+            return RecordState.Giveup;
+        } else {
+            return RecordState.Timeout;
         }
     }
 
@@ -69,6 +81,18 @@ component TaskCard inherits Rectangle {
 
     ta := TouchArea { }
 
+    progress-bar := CircleProgress {
+        x: Theme.padding * 2;
+        y: Theme.padding * 2;
+        radius: Theme.icon-size * 0.8;
+        ring-width: Theme.padding;
+        font-size: Theme.default-font-size * 2 / 3;
+        finished-text: "100%";
+        finished-progress-color: led-number.colorize;
+        progress: calc-progress(entry.start-date, entry.end-date);
+        height: self.width;
+    }
+
     more-icon := IconBtn {
         x: root.width - self.width - Theme.padding * 4;
         y: Theme.padding * 4;
@@ -83,6 +107,7 @@ component TaskCard inherits Rectangle {
 
     vbox := VerticalLayout {
         padding: Theme.padding * 4;
+        alignment: LayoutAlignment.center;
 
         num-hbox := HorizontalLayout {
             width: Theme.icon-size * 12;
@@ -92,7 +117,7 @@ component TaskCard inherits Rectangle {
                 alignment: LayoutAlignment.center;
 
                 led-number := HorizontalLedNumber {
-                    number-spacing: Theme.spacing * 4;
+                    number-spacing: Theme.spacing * 2;
                     number-padding: Theme.padding * 4;
                     number-size: Theme.icon-size * 2;
                     colorize: state-color(entry.state);
@@ -130,17 +155,21 @@ component TaskCard inherits Rectangle {
             }
         }
 
-        HorizontalLayout {
+        VerticalLayout {
             alignment: LayoutAlignment.start;
-            padding-top: Theme.padding * 4;
-            spacing: Theme.spacing * 2;
 
-            for index in 3: Tag {
-                visible: !self.text.is-empty;
-                text: index == 0 && entry.tags.length >= 1 ? entry.tags[index] : (entry.tags.length >= 2 && index == 1 ? entry.tags[index] : (entry.tags.length >= 3 && index == 2 ? entry.tags[index] : ""));
-                background: Theme.tag-colors[index];
-                hpadding: Theme.padding * 2;
-                text-color: self.background.darker(150%);
+            HorizontalLayout {
+                alignment: LayoutAlignment.start;
+                padding-top: Theme.padding * 4;
+                spacing: Theme.spacing * 4;
+
+                for index in 3: Tag {
+                    visible: !self.text.is-empty;
+                    text: index == 0 && entry.tags.length >= 1 ? entry.tags[index] : (entry.tags.length >= 2 && index == 1 ? entry.tags[index] : (entry.tags.length >= 3 && index == 2 ? entry.tags[index] : ""));
+                    background: Theme.tag-colors[index];
+                    hpadding: Theme.padding * 2;
+                    text-color: self.background.darker(150%);
+                }
             }
         }
 
@@ -149,12 +178,12 @@ component TaskCard inherits Rectangle {
             padding-top: Theme.padding * 4;
 
             state-btn := TextBtnWithoutIcon {
-                text: state-str(entry.state);
+                text: state-to-str(entry.state);
                 text-color: led-number.colorize;
                 font-weight: Theme.bold-font-weight;
 
                 clicked => {
-                    Logic.update-task-state(RecordState.Finished);
+                    state-pop.show();
                 }
             }
 
@@ -164,16 +193,51 @@ component TaskCard inherits Rectangle {
             }
         }
     }
+
+    state-pop := PopupWindow {
+        x: state-btn.absolute-position.x - root.absolute-position.x + state-btn.width / 2 - self.width / 2;
+        y: state-btn.absolute-position.y - root.absolute-position.y - self.height - Theme.padding * 2;
+
+        private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Unfinished")];
+
+        rec := Rectangle {
+            background: Theme.base-background;
+            border-width: Theme.default-border-width;
+            border-color: Theme.base-border-color;
+
+            state-pop-vbox := VerticalLayout {
+                spacing: Theme.spacing * 2;
+                padding: Theme.padding;
+
+                for value[index] in values: Rectangle {
+                    background: pop-ta.has-hover ? Theme.hover-background : Theme.base-background;
+
+                    HorizontalLayout {
+                        alignment: LayoutAlignment.start;
+                        padding: Theme.padding;
+
+                        Label {
+                            horizontal-alignment: TextHorizontalAlignment.left;
+                            overflow: elide;
+                            text: value;
+                        }
+                    }
+
+                    pop-ta := TouchArea {
+                        clicked => {
+                            Logic.update-task-state(str-to-state(value));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 export component Record inherits ListView {
     private property <length> task-card-width: Theme.icon-size * 12;
     private property <int> column-counts: (self.width - Theme.padding * 8 - Theme.padding * 8 * 2) / task-card-width;
     private property <int> row-counts: Math.ceil(Store.record-entries.length / column-counts);
-
-    init => {
-        debug(self.width, self.task-card-width);
-    }
 
     for row-index in row-counts: VerticalLayout {
         padding: Theme.padding * 4;
