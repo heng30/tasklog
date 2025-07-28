@@ -4,13 +4,91 @@ import { RecordState, SortRecord, RecordEntry } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
 import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress } from "../../base/widgets.slint";
 
+component StatePopup inherits PopupWindow {
+    private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Unfinished")];
+
+    callback update-task-state(state: string);
+
+    Rectangle {
+        background: Theme.base-background;
+        border-width: Theme.default-border-width;
+        border-color: Theme.base-border-color;
+
+        VerticalLayout {
+            spacing: Theme.spacing * 2;
+            padding: Theme.padding * 2;
+
+            for value[index] in values: Rectangle {
+                background: state-pop-ta.has-hover ? Theme.hover-background : Theme.base-background;
+                border-radius: Theme.border-radius;
+
+                state-pop-hbox := HorizontalLayout {
+                    padding: Theme.padding * 2;
+                    Label {
+                        text: value;
+                        font-size: Theme.title5-font-size;
+                    }
+                }
+
+                state-pop-ta := TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    clicked => {
+                        root.update-task-state(value);
+                    }
+                }
+            }
+        }
+    }
+}
+
+component TopBar inherits HorizontalLayout {
+    alignment: LayoutAlignment.center;
+
+    Rectangle {
+        width: 80%;
+        height: hbox.preferred-height;
+        border-radius: self.height / 2;
+        background: Theme.secondary-background;
+        border-width: Theme.default-border-width;
+        border-color: Theme.base-border-color;
+
+        hbox := HorizontalLayout {
+            spacing: Theme.spacing * 4;
+            padding: Theme.padding * 2;
+            padding-left: Theme.padding * 4;
+            padding-right: Theme.padding * 4;
+
+            search := Search {
+                gain-focus-when-clicked: false;
+
+                search(text) => {
+                    Logic.search-record(text);
+                }
+
+                edited(text) => {
+                    Logic.search-record(text);
+                }
+            }
+
+            IconBtn {
+                icon: Icons.add-light;
+                hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                clicked => {
+                    Logic.add-record();
+                }
+            }
+        }
+    }
+}
+
 component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
 
     private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
 
     function remain-days(start-date: string, end-date: string) -> [int] {
-        return [4, 5];
+        return [4, 5, 8];
     }
 
     function calc-progress(start-date: string, end-date: string) -> float {
@@ -99,6 +177,7 @@ component TaskCard inherits Rectangle {
         width: Theme.icon-size;
         height: self.width;
         icon: Icons.more-v;
+        hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
         clicked => {
            // TODO
@@ -183,7 +262,7 @@ component TaskCard inherits Rectangle {
                 font-weight: Theme.bold-font-weight;
 
                 clicked => {
-                    state-pop.show();
+                    state-popup.show();
                 }
             }
 
@@ -194,72 +273,54 @@ component TaskCard inherits Rectangle {
         }
     }
 
-    state-pop := PopupWindow {
+    state-popup := StatePopup {
         x: state-btn.absolute-position.x - root.absolute-position.x + state-btn.width / 2 - self.width / 2;
         y: state-btn.absolute-position.y - root.absolute-position.y - self.height - Theme.padding * 2;
 
-        private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Unfinished")];
-
-        rec := Rectangle {
-            background: Theme.base-background;
-            border-width: Theme.default-border-width;
-            border-color: Theme.base-border-color;
-
-            state-pop-vbox := VerticalLayout {
-                spacing: Theme.spacing * 2;
-                padding: Theme.padding;
-
-                for value[index] in values: Rectangle {
-                    background: pop-ta.has-hover ? Theme.hover-background : Theme.base-background;
-
-                    HorizontalLayout {
-                        alignment: LayoutAlignment.start;
-                        padding: Theme.padding;
-
-                        Label {
-                            horizontal-alignment: TextHorizontalAlignment.left;
-                            overflow: elide;
-                            text: value;
-                        }
-                    }
-
-                    pop-ta := TouchArea {
-                        clicked => {
-                            Logic.update-task-state(str-to-state(value));
-                        }
-                    }
-                }
-            }
+        update-task-state(value) => {
+            Logic.update-task-state(str-to-state(value));
         }
     }
 }
 
-export component Record inherits ListView {
-    private property <length> task-card-width: Theme.icon-size * 12;
-    private property <int> column-counts: (self.width - Theme.padding * 8 - Theme.padding * 8 * 2) / task-card-width;
-    private property <int> row-counts: Math.ceil(Store.record-entries.length / column-counts);
+export component Record inherits Rectangle {
+    GainFocus { }
 
-    for row-index in row-counts: VerticalLayout {
-        padding: Theme.padding * 4;
+    VerticalLayout {
+        private property <length> task-card-width: Theme.icon-size * 12;
+        private property <int> column-counts: (self.width - Theme.padding * 8 - Theme.padding * 8 * 2) / task-card-width;
+        private property <int> row-counts: Math.ceil(Store.record-entries.length / column-counts);
 
-        HorizontalLayout {
-            spacing: Theme.spacing * 8;
-            alignment: LayoutAlignment.space-around;
+        spacing: Theme.spacing * 2;
 
-            for column-index in column-counts: Rectangle {
-                width: tc.width;
-                height: tc.height;
+        TopBar {
+            width: 100%;
+        }
 
-                tc := TaskCard {
-                    private property <int> current-index: row-index * column-counts + column-index;
-                    private property <bool> is-show-card: current-index < Store.record-entries.length;
+        ListView {
+            for row-index in row-counts: VerticalLayout {
+                padding: Theme.padding * 4;
 
-                    init => {
-                        task-card-width = Math.max(self.preferred-width, task-card-width);
+                HorizontalLayout {
+                    spacing: Theme.spacing * 8;
+                    alignment: LayoutAlignment.space-around;
+
+                    for column-index in column-counts: Rectangle {
+                        width: tc.width;
+                        height: tc.height;
+
+                        tc := TaskCard {
+                            private property <int> current-index: row-index * column-counts + column-index;
+                            private property <bool> is-show-card: current-index < Store.record-entries.length;
+
+                            init => {
+                                task-card-width = Math.max(self.preferred-width, task-card-width);
+                            }
+
+                            visible: is-show-card;
+                            entry: Store.record-entries[ is-show-card ? current-index : 0];
+                        }
                     }
-
-                    visible: is-show-card;
-                    entry: Store.record-entries[ is-show-card ? current-index : 0];
                 }
             }
         }

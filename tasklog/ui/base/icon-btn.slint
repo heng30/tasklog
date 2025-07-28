@@ -41,6 +41,7 @@ export component IconBtn inherits Rectangle {
     in-out property <ComponentPosition> tip-position;
 
     in-out property <color> bg-color: Colors.transparent;
+    in-out property <color> hover-color: Theme.hover-background;
     in-out property <color> bg-pressed-color: self.bg-color;
 
     callback clicked();
@@ -61,7 +62,7 @@ export component IconBtn inherits Rectangle {
         width: Math.max(Theme.icon-size, root.icon-size) + Theme.spacing * 4;
         height: self.width;
         border-radius: self.width / 2;
-        background: touch.has-hover ? Theme.hover-background : Colors.transparent;
+        background: touch.has-hover ? root.hover-color : Colors.transparent;
     }
 
     hbox := HorizontalLayout {
@@ -110,11 +111,9 @@ export component IconBtn inherits Rectangle {
                     icon-rotation-angle = 0deg;
                 }
             }
-
             if (gain-focus-when-clicked) {
                 fs.focus();
             }
-
             root.clicked();
         }
 
