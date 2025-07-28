@@ -41,8 +41,8 @@ component TaskCard inherits Rectangle {
         }
     }
 
-    width: vbox.preferred-width;
-    height: vbox.preferred-height;
+    preferred-width: vbox.preferred-width;
+    preferred-height: vbox.preferred-height;
     background: Theme.secondary-background;
     border-radius: Theme.border-radius * 2;
     border-color: root.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
@@ -52,20 +52,16 @@ component TaskCard inherits Rectangle {
 
     states [
         zoom-in when root.has-hover: {
-            x: -Theme.padding / 2;
-            y: -Theme.padding / 2;
-            width: vbox.preferred-width + Theme.padding;
-            height: vbox.preferred-height + Theme.padding;
+            width: vbox.preferred-width + Theme.padding * 2;
+            height: vbox.preferred-height + Theme.padding * 2;
             in {
-                animate x, y, width, height { duration: Theme.default-animate-duration; }
+                animate width, height { duration: Theme.default-animate-duration; }
             }
             out {
-                animate x, y, width, height { duration: Theme.default-animate-duration; }
+                animate width, height { duration: Theme.default-animate-duration; }
             }
         }
         zoom-out when !root.has-hover: {
-            x: 0;
-            y: 0;
             width: vbox.preferred-width;
             height: vbox.preferred-height;
         }
@@ -171,14 +167,20 @@ component TaskCard inherits Rectangle {
 }
 
 export component Record inherits ListView {
-    private property <int> column-counts: 2;
+    private property <length> task-card-width: Theme.icon-size * 12;
+    private property <int> column-counts: (self.width - Theme.padding * 8 - Theme.padding * 8 * 2) / task-card-width;
     private property <int> row-counts: Math.ceil(Store.record-entries.length / column-counts);
+
+    init => {
+        debug(self.width, self.task-card-width);
+    }
 
     for row-index in row-counts: VerticalLayout {
         padding: Theme.padding * 4;
 
         HorizontalLayout {
             spacing: Theme.spacing * 8;
+            alignment: LayoutAlignment.space-around;
 
             for column-index in column-counts: Rectangle {
                 width: tc.width;
@@ -187,6 +189,10 @@ export component Record inherits ListView {
                 tc := TaskCard {
                     private property <int> current-index: row-index * column-counts + column-index;
                     private property <bool> is-show-card: current-index < Store.record-entries.length;
+
+                    init => {
+                        task-card-width = Math.max(self.preferred-width, task-card-width);
+                    }
 
                     visible: is-show-card;
                     entry: Store.record-entries[ is-show-card ? current-index : 0];
