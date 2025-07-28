@@ -63,6 +63,7 @@ export struct RecordEntry{
     title: string,
     plan: string,
     state: RecordState,
+    tags: [string],
 }
 
 //////////////////////////////// Logic Struct End  ////////////////////////////////
@@ -86,7 +87,7 @@ export global Store {
         language: "en",
         always-on-top: false,
         no-frame: true,
-        is-dark: false,
+        is-dark: true,
     };
 
     //////////////////////////////// Logic Start ////////////////////////////////
@@ -96,9 +97,10 @@ export global Store {
             uuid: "uuid-1",
             start-date: "2025-01-02",
             end-date: "2025-03-02",
-            title: "Study Deep Learning. hello world",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
             plan: "A simple plane",
             state: RecordState.Unfinish,
+            tags: ["Study", "Project", "人物"],
         },
         {
             uuid: "uuid-2",
@@ -112,7 +114,7 @@ export global Store {
             uuid: "uuid-3",
             start-date: "2025-01-02",
             end-date: "2025-03-02",
-            title: "Study Deep Learning. fix",
+            title: "中文成为是及时好喝吗节混合论文",
             plan: "A simple plane",
             state: RecordState.Giveup,
         },

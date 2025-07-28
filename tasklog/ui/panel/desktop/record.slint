@@ -2,13 +2,15 @@ import { ListView, DatePickerPopup } from "std-widgets.slint";
 
 import { RecordState, SortRecord, RecordEntry } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag } from "../../base/widgets.slint";
 
 component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
 
-    width: vbox.preferred-width;
-    height: vbox.preferred-height;
+    x: ta.has-hover ? -Theme.padding / 2 : 0;
+    y: ta.has-hover ? -Theme.padding / 2 : 0;
+    width: vbox.preferred-width + (ta.has-hover ? Theme.padding : 0);
+    height: vbox.preferred-height + (ta.has-hover ? Theme.padding : 0);
     background: Theme.secondary-background;
     border-radius: Theme.border-radius * 2;
     border-color: ta.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
@@ -16,10 +18,15 @@ component TaskCard inherits Rectangle {
     drop-shadow-blur: Theme.padding * 2;
     drop-shadow-color: self.border-color;
 
+    animate x, y, width, height {
+        duration: Theme.default-animate-duration;
+        easing: ease-in-out;
+    }
+
     ta := TouchArea { }
 
-    function remain-days(start-date: string, end-date: string) -> int {
-        return 12;
+    function remain-days(start-date: string, end-date: string) -> [int] {
+        return [4, 5];
     }
 
     function calc-progress(start-date: string, end-date: string) -> float {
@@ -38,6 +45,18 @@ component TaskCard inherits Rectangle {
         }
     }
 
+    function state-str(state: RecordState) -> string {
+        if (state == RecordState.Unfinish) {
+            return Logic.tr("Unfinish");
+        } else if (state == RecordState.Finished) {
+            return Logic.tr("Finished");
+        } else if (state == RecordState.Giveup) {
+            return Logic.tr("Giveup");
+        } else {
+            return Logic.tr("Timeout");
+        }
+    }
+
     vbox := VerticalLayout {
         padding: Theme.padding * 4;
 
@@ -53,7 +72,7 @@ component TaskCard inherits Rectangle {
                     number-padding: Theme.padding * 4;
                     number-size: Theme.icon-size * 2;
                     colorize: state-color(entry.state);
-                    numbers: [4, 5];
+                    numbers: remain-days(entry.start-date, entry.end-date);
                 }
             }
 
@@ -62,7 +81,7 @@ component TaskCard inherits Rectangle {
                 padding-bottom: Theme.padding * 4;
 
                 Label {
-                    text: Logic.tr("days");
+                    text: entry.start-date != entry.end-date ? Logic.tr("days") : Logic.tr("day");
                     color: Theme.placeholder-text-color;
                 }
             }
@@ -75,18 +94,35 @@ component TaskCard inherits Rectangle {
         HorizontalLayout {
             padding-top: Theme.padding * 2;
 
-            Label {
+            title-lb := Label {
+                vertical-alignment: TextVerticalAlignment.top;
                 width: num-hbox.width;
+                height: title-lb.font-size * 3;
                 font-size: Theme.title3-font-size;
                 font-weight: Theme.bold-font-weight;
                 wrap: word-wrap;
                 text: entry.title;
+                overflow: elide;
             }
         }
 
         HorizontalLayout {
+            alignment: LayoutAlignment.start;
             padding-top: Theme.padding * 4;
+            spacing: Theme.spacing * 2;
+
+            for index in 3: Tag {
+                visible: !self.text.is-empty;
+                text: index == 0 ? state-str(entry.state) : (entry.tags.length >= 1 ? entry.tags[0] : (entry.tags.length >= 2 ? entry.tags[1] : ""));
+                background: Theme.tag-colors[index];
+                hpadding: Theme.padding * 2;
+                text-color: self.background.darker(150%);
+            }
+        }
+
+        HorizontalLayout {
             alignment: LayoutAlignment.end;
+            padding-top: Theme.padding * 4;
 
             Label {
                 text: Logic.tr("Ends on ") + entry.end-date;
@@ -107,12 +143,17 @@ export component Record inherits ListView {
             spacing: Theme.spacing * 8;
             // alignment: LayoutAlignment.space-around;
 
-            for column-index in column-counts: TaskCard {
-                private property <int> current-index: row-index * column-counts + column-index;
-                private property <bool> is-show-card: current-index < Store.record-entries.length;
+            for column-index in column-counts: Rectangle {
+                width: tc.width;
+                height: tc.height;
 
-                visible: is-show-card;
-                entry: Store.record-entries[ is-show-card ? current-index : 0];
+                tc := TaskCard {
+                    private property <int> current-index: row-index * column-counts + column-index;
+                    private property <bool> is-show-card: current-index < Store.record-entries.length;
+
+                    visible: is-show-card;
+                    entry: Store.record-entries[ is-show-card ? current-index : 0];
+                }
             }
         }
     }
