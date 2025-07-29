@@ -79,14 +79,11 @@ export component RecordEditDialog inherits Dialog {
 
                     clicked => {
                         self.text = Logic.paste-from-clipboard();
-                        Store.edit-record-entry.title = self.text;
                     }
                 }
             }
 
             SettingDetailInnerVbox {
-                private property <bool> update-tag-flag;
-
                 SettingDetailLabel {
                     text: Logic.tr("Tags");
                 }
@@ -110,7 +107,6 @@ export component RecordEditDialog inherits Dialog {
                         }
 
                         self.text = "";
-                        update-tag-flag = !update-tag-flag;
                     }
 
                     clicked => {
@@ -123,17 +119,17 @@ export component RecordEditDialog inherits Dialog {
                 }
 
                 HorizontalLayout {
-                    alignment: start;
+                    alignment: center;
                     padding-top: Theme.padding * 2;
                     spacing: Theme.spacing * 4;
 
-                    function tag-name(index: int, _: bool) -> string {
-                        if (index == 0 && Store.edit-record-entry.tags.length >= 1) {
-                            return Store.edit-record-entry.tags[0];
-                        } else if (index == 1 && Store.edit-record-entry.tags.length >= 2) {
-                            return Store.edit-record-entry.tags[1];
-                        } else if (index == 2 && Store.edit-record-entry.tags.length >= 3) {
-                            return Store.edit-record-entry.tags[2];
+                    function tag-name(tags: [string], index: int) -> string {
+                        if (index == 0 && tags.length >= 1) {
+                            return tags[0];
+                        } else if (index == 1 && tags.length >= 2) {
+                            return tags[1];
+                        } else if (index == 2 && tags.length >= 3) {
+                            return tags[2];
                         } else {
                             return "";
                         }
@@ -141,8 +137,9 @@ export component RecordEditDialog inherits Dialog {
 
                     for index in 3: Tag {
                         visible: !self.text.is-empty;
-                        text: parent.tag-name(index, update-tag-flag);
+                        text: tag-name(Store.edit-record-entry.tags, index);
                         background: Theme.tag-colors[index];
+                        text-color: self.background.darker(150%);
                         is-show-close-btn: true;
 
                         close => {
@@ -177,10 +174,8 @@ export component RecordEditDialog inherits Dialog {
         confirmed(date) => {
             if (is-set-start-date) {
                 start-date-lineedit.text = date-str(date);
-                Store.edit-record-entry.start-date = start-date-lineedit.text;
             } else {
                 end-date-lineedit.text = date-str(date);
-                Store.edit-record-entry.end-date = end-date-lineedit.text;
             }
         }
     }
@@ -191,7 +186,10 @@ export component RecordEditDialog inherits Dialog {
 
     ok-clicked => {
         Logic.switch-popup(PopupIndex.None);
-        // TODO
+
+        Store.edit-record-entry.start-date = start-date-lineedit.text;
+        Store.edit-record-entry.end-date = end-date-lineedit.text;
+        Store.edit-record-entry.title = task-name-lineedit.text;
         Logic.update-record(Store.edit-record-entry);
     }
 }

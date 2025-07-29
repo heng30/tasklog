@@ -277,7 +277,6 @@ component TaskCard inherits Rectangle {
                     visible: !self.text.is-empty;
                     text: index == 0 && entry.tags.length >= 1 ? entry.tags[index] : (entry.tags.length >= 2 && index == 1 ? entry.tags[index] : (entry.tags.length >= 3 && index == 2 ? entry.tags[index] : ""));
                     background: Theme.tag-colors[index];
-                    hpadding: Theme.padding * 2;
                     text-color: self.background.darker(150%);
                 }
             }
