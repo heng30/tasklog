@@ -1,13 +1,12 @@
-import { ListView, DatePickerPopup } from "std-widgets.slint";
-
-import { RecordState, SortRecord, RecordEntry } from "../../store.slint";
+import { ListView } from "std-widgets.slint";
+import { RecordState, RecordEntry, PopupIndex } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress } from "../../base/widgets.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress, PopupActionSetting, PasswordSetting } from "../../base/widgets.slint";
 
 component StatePopup inherits PopupWindow {
     private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Unfinished")];
 
-    callback update-task-state(state: string);
+    callback update-record-state(state: string);
 
     Rectangle {
         background: Theme.base-background;
@@ -33,7 +32,7 @@ component StatePopup inherits PopupWindow {
                 state-pop-ta := TouchArea {
                     mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
                     clicked => {
-                        root.update-task-state(value);
+                        root.update-record-state(value);
                     }
                 }
             }
@@ -75,7 +74,7 @@ component TopBar inherits HorizontalLayout {
                 hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
                 clicked => {
-                    Logic.add-record();
+                    Logic.new-record();
                 }
             }
         }
@@ -84,6 +83,7 @@ component TopBar inherits HorizontalLayout {
 
 component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
+    in-out property <int> current-index;
 
     private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
 
@@ -169,6 +169,13 @@ component TaskCard inherits Rectangle {
         finished-progress-color: led-number.colorize;
         progress: calc-progress(entry.start-date, entry.end-date);
         height: self.width;
+
+        TouchArea {
+            mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+            clicked => {
+                Logic.switch-popup(PopupIndex.RecordPlan);
+            }
+        }
     }
 
     more-icon := IconBtn {
@@ -180,7 +187,32 @@ component TaskCard inherits Rectangle {
         hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
         clicked => {
-           // TODO
+            PopupActionSetting.show(self.absolute-position.x + self.mouse-x + Theme.padding, self.absolute-position.y + self.mouse-y + Theme.padding, [
+                {
+                    icon: Icons.edit,
+                    text: "Edit",
+                    action: "edit-record",
+                    user-data: current-index,
+                },
+                {
+                    icon: Icons.plan-fill,
+                    text: "Plan",
+                    action: "plan-record",
+                    user-data: current-index,
+                },
+                {
+                    icon: Icons.archive-fill,
+                    text: "Archive",
+                    action: "archive-record",
+                    user-data: current-index,
+                },
+                {
+                    icon: Icons.delete-fill,
+                    text: "Remove",
+                    action: "remove-record",
+                    user-data: current-index,
+                },
+            ]);
         }
     }
 
@@ -188,30 +220,29 @@ component TaskCard inherits Rectangle {
         padding: Theme.padding * 4;
         alignment: LayoutAlignment.center;
 
-        num-hbox := HorizontalLayout {
+        num-hbox := Rectangle {
             width: Theme.icon-size * 12;
-            alignment: LayoutAlignment.center;
 
-            HorizontalLayout {
-                alignment: LayoutAlignment.center;
-
-                led-number := HorizontalLedNumber {
-                    number-spacing: Theme.spacing * 2;
-                    number-padding: Theme.padding * 4;
-                    number-size: Theme.icon-size * 2;
-                    colorize: state-color(entry.state);
-                    numbers: remain-days(entry.start-date, entry.end-date);
-                }
+            Label {
+                x: Math.max(0, led-number.x - self.preferred-width);
+                y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
+                text: Logic.tr("remain");
+                color: Theme.placeholder-text-color;
             }
 
-            VerticalLayout {
-                alignment: LayoutAlignment.end;
-                padding-bottom: Theme.padding * 4;
+            led-number := HorizontalLedNumber {
+                number-spacing: Theme.spacing * 2;
+                number-padding: Theme.padding * 4;
+                number-size: Theme.icon-size * 2;
+                colorize: state-color(entry.state);
+                numbers: remain-days(entry.start-date, entry.end-date);
+            }
 
-                Label {
-                    text: entry.start-date != entry.end-date ? Logic.tr("days") : Logic.tr("day");
-                    color: Theme.placeholder-text-color;
-                }
+            Label {
+                x: Math.min(led-number.x + led-number.preferred-width - Theme.padding * 2, root.width - self.preferred-width);
+                y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
+                text: entry.start-date != entry.end-date ? Logic.tr("days") : Logic.tr("day");
+                color: Theme.placeholder-text-color;
             }
         }
 
@@ -277,8 +308,8 @@ component TaskCard inherits Rectangle {
         x: state-btn.absolute-position.x - root.absolute-position.x + state-btn.width / 2 - self.width / 2;
         y: state-btn.absolute-position.y - root.absolute-position.y - self.height - Theme.padding * 2;
 
-        update-task-state(value) => {
-            Logic.update-task-state(str-to-state(value));
+        update-record-state(value) => {
+            Logic.update-record-state(str-to-state(value));
         }
     }
 }
@@ -310,15 +341,15 @@ export component Record inherits Rectangle {
                         height: tc.height;
 
                         tc := TaskCard {
-                            private property <int> current-index: row-index * column-counts + column-index;
-                            private property <bool> is-show-card: current-index < Store.record-entries.length;
+                            private property <bool> is-show-card: self.current-index < Store.record-entries.length;
 
                             init => {
                                 task-card-width = Math.max(self.preferred-width, task-card-width);
                             }
 
                             visible: is-show-card;
-                            entry: Store.record-entries[ is-show-card ? current-index : 0];
+                            current-index: row-index * column-counts + column-index;
+                            entry: Store.record-entries[ is-show-card ? self.current-index : 0];
                         }
                     }
                 }

@@ -1,4 +1,4 @@
-import { ListView, DatePickerPopup } from "std-widgets.slint";
+import { ListView } from "std-widgets.slint";
 
 import { RecordState, SortRecord } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
@@ -191,7 +191,7 @@ export component TableBody inherits ListView {
     }
 }
 
-export component Record inherits VerticalLayout {
+export component Archive inherits VerticalLayout {
     private property <length> title-start-date-width;
     private property <length> title-end-date-width;
 

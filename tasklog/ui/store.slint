@@ -15,6 +15,8 @@ export enum PopupIndex {
     About,
     Donate,
     Help,
+    RecordPlan,
+    RecordEidt,
     None,
 }
 
@@ -43,12 +45,6 @@ export struct SettingProxy {
 
 //////////////////////////////// Logic Struct Start ////////////////////////////////
 
-export enum SortRecord {
-    Start,
-    End,
-    Goal,
-}
-
 export enum RecordState {
     Unfinished,
     Finished,
@@ -75,7 +71,7 @@ export global Store {
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
     in-out property <TabIndex> current-tab-index: TabIndex.Home;
-    in-out property <PopupIndex> current-popup-index: PopupIndex.None;
+    in-out property <PopupIndex> current-popup-index: PopupIndex.RecordEidt;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";
@@ -91,6 +87,7 @@ export global Store {
     };
 
     //////////////////////////////// Logic Start ////////////////////////////////
+    in-out property <RecordEntry> edit-record-entry;
 
     in-out property <[RecordEntry]> record-entries: [
         {

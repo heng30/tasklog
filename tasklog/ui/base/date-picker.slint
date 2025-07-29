@@ -148,8 +148,12 @@ export component DatePicker inherits Rectangle {
 
     width: vbox.preferred-width;
     height: vbox.preferred-height;
+    preferred-width: vbox.preferred-width;
+    preferred-height: vbox.preferred-height;
     border-radius: Theme.border-radius;
     background: Theme.base-background;
+    border-width: Theme.default-border-width;
+    border-color: Theme.base-border-color;
 
     vbox := VerticalLayout {
         padding: Theme.padding * 4;
@@ -322,14 +326,18 @@ export component DatePickerPopup inherits PopupWindow {
     height: dp.height;
     close-policy: PopupClosePolicy.close-on-click-outside;
 
-    dp := DatePicker {
-        canceled => {
-            root.close();
-        }
+    VerticalLayout {
+        dp := DatePicker {
+            border-radius: 0;
 
-        confirmed(date) => {
-            root.close();
-            root.confirmed(date);
+            canceled => {
+                root.close();
+            }
+
+            confirmed(date) => {
+                root.close();
+                root.confirmed(date);
+            }
         }
     }
 }

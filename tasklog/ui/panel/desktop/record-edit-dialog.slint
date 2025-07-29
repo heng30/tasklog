@@ -1,0 +1,197 @@
+import { RecordState, PopupIndex, RecordEntry } from "../../store.slint";
+import { Theme, Icons, Store, Util, Logic } from "../def.slint";
+import { Date, ToastStatus} from "../../base/def.slint";
+import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, DatePickerPopup, Tag, Dialog, SettingDetailInner, SettingDetailInnerVbox, SettingDetailLabel } from "../../base/widgets.slint";
+
+export component RecordEditDialog inherits Dialog {
+    title: Store.edit-record-entry.uuid.is-empty ? Logic.tr("New") : Logic.tr("Edit");
+    is-prevent-event-forward: true;
+
+    in-out property <length> inner-height: 650px;
+
+    private property <RecordEntry> clean-entry;
+    private property <bool> is-set-start-date;
+    private property <Date> current-date: Util.get-current-date();
+
+    function date-str(date: Date) -> string {
+        return date.year + "-" + date.month + "-" + date.day;
+    }
+
+    init => {
+        if (Store.edit-record-entry.uuid.is-empty) {
+            Store.edit-record-entry = clean-entry;
+            Store.edit-record-entry.state = RecordState.Unfinished;
+            Store.edit-record-entry.start-date = date-str(current-date);
+            Store.edit-record-entry.end-date = date-str(current-date);
+        }
+    }
+
+    VerticalLayout {
+        height: root.inner-height;
+
+        SettingDetailInner {
+            SettingDetailInnerVbox {
+                SettingDetailLabel {
+                    text: Logic.tr("Start date");
+                }
+
+                start-date-lineedit := LineInput {
+                    read-only: true;
+                    is-show-icon: true;
+                    icon: Icons.calender;
+                    text: Store.edit-record-entry.start-date;
+
+                    clicked => {
+                        is-set-start-date = true;
+                        dp.show();
+                    }
+                }
+            }
+
+            SettingDetailInnerVbox {
+                SettingDetailLabel {
+                    text: Logic.tr("End date");
+                }
+
+                end-date-lineedit := LineInput {
+                    read-only: true;
+                    is-show-icon: true;
+                    icon: Icons.calender;
+                    text: Store.edit-record-entry.end-date;
+
+                    clicked => {
+                        is-set-start-date = false;
+                        dp.show();
+                    }
+                }
+            }
+
+            SettingDetailInnerVbox {
+                SettingDetailLabel {
+                    text: Logic.tr("Task name");
+                }
+
+                task-name-lineedit := LineInput {
+                    is-show-icon: true;
+                    icon: Icons.paste;
+                    placeholder-text: Logic.tr("Enter task name");
+                    text: Store.edit-record-entry.title;
+
+                    clicked => {
+                        self.text = Logic.paste-from-clipboard();
+                        Store.edit-record-entry.title = self.text;
+                    }
+                }
+            }
+
+            SettingDetailInnerVbox {
+                private property <bool> update-tag-flag;
+
+                SettingDetailLabel {
+                    text: Logic.tr("Tags");
+                }
+
+                tag-lineedit := LineInput {
+                    is-show-icon: true;
+                    icon: Icons.success;
+                    placeholder-text: Logic.tr("Enter tag");
+                    text: Store.edit-record-entry.title;
+
+                    function add-tag(tag: string) {
+                        if (Store.edit-record-entry.tags.length == 0) {
+                            Store.edit-record-entry.tags = [tag];
+                        } else if (Store.edit-record-entry.tags.length == 1) {
+                            Store.edit-record-entry.tags = [Store.edit-record-entry.tags[0], tag];
+                        } else if (Store.edit-record-entry.tags.length == 2) {
+                            Store.edit-record-entry.tags = [Store.edit-record-entry.tags[0], Store.edit-record-entry.tags[1], tag];
+                        } else {
+                            Util.show-toast(Logic.tr("Too many tags. Only support 3 tags."), ToastStatus.Warning);
+                            return;
+                        }
+
+                        self.text = "";
+                        update-tag-flag = !update-tag-flag;
+                    }
+
+                    clicked => {
+                        add-tag(self.text);
+                    }
+
+                    accepted => {
+                        add-tag(self.text);
+                    }
+                }
+
+                HorizontalLayout {
+                    alignment: start;
+                    padding-top: Theme.padding * 2;
+                    spacing: Theme.spacing * 4;
+
+                    function tag-name(index: int, _: bool) -> string {
+                        if (index == 0 && Store.edit-record-entry.tags.length >= 1) {
+                            return Store.edit-record-entry.tags[0];
+                        } else if (index == 1 && Store.edit-record-entry.tags.length >= 2) {
+                            return Store.edit-record-entry.tags[1];
+                        } else if (index == 2 && Store.edit-record-entry.tags.length >= 3) {
+                            return Store.edit-record-entry.tags[2];
+                        } else {
+                            return "";
+                        }
+                    }
+
+                    for index in 3: Tag {
+                        visible: !self.text.is-empty;
+                        text: parent.tag-name(index, update-tag-flag);
+                        background: Theme.tag-colors[index];
+                        is-show-close-btn: true;
+
+                        close => {
+                            if (Store.edit-record-entry.tags.length == 1) {
+                                Store.edit-record-entry.tags = [];
+                            } else if (Store.edit-record-entry.tags.length == 2) {
+                                if (index == 0) {
+                                    Store.edit-record-entry.tags = [Store.edit-record-entry.tags[1]];
+                                } else {
+                                    Store.edit-record-entry.tags = [Store.edit-record-entry.tags[0]];
+                                }
+                            } else {
+                                if (index == 0) {
+                                    Store.edit-record-entry.tags = [Store.edit-record-entry.tags[1], Store.edit-record-entry.tags[2]];
+                                } else if (index == 1) {
+                                    Store.edit-record-entry.tags = [Store.edit-record-entry.tags[0], Store.edit-record-entry.tags[2]];
+                                } else {
+                                    Store.edit-record-entry.tags = [Store.edit-record-entry.tags[0], Store.edit-record-entry.tags[1]];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    dp := DatePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: 100px;
+
+        confirmed(date) => {
+            if (is-set-start-date) {
+                start-date-lineedit.text = date-str(date);
+                Store.edit-record-entry.start-date = start-date-lineedit.text;
+            } else {
+                end-date-lineedit.text = date-str(date);
+                Store.edit-record-entry.end-date = end-date-lineedit.text;
+            }
+        }
+    }
+
+    cancel-clicked => {
+        Logic.switch-popup(PopupIndex.None);
+    }
+
+    ok-clicked => {
+        Logic.switch-popup(PopupIndex.None);
+        // TODO
+        Logic.update-record(Store.edit-record-entry);
+    }
+}

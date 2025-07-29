@@ -18,6 +18,8 @@ export component IconBtn inherits Rectangle {
     in-out property mouse-cursor <=> touch.mouse-cursor;
     in-out property enabled-toucharea <=> touch.enabled;
     out property has-hover <=> touch.has-hover;
+    out property mouse-x <=> touch.mouse-x;
+    out property mouse-y <=> touch.mouse-y;
 
     in-out property <bool> show-icon-hover-background: true;
     in-out property <bool> is-ltr: true;

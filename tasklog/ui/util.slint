@@ -41,6 +41,14 @@ export global Util {
     pure callback split-and-join-string(input: string, length: int, sep: string) -> string;
 
     pure callback get-current-date() -> Date;
+    get-current-date => {
+        return {
+            year: 2025,
+            month: 10,
+            day:09,
+        };
+    }
+
     pure callback upate-date-picker(year: int, month: int) -> [[Date]];
 
     public pure function text-color(status: ToastStatus) -> color {
