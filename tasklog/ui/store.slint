@@ -46,7 +46,8 @@ export struct SettingProxy {
 //////////////////////////////// Logic Struct Start ////////////////////////////////
 
 export enum RecordState {
-    Unfinished,
+    NotStarted,
+    Running,
     Finished,
     Giveup,
     Timeout,
@@ -97,7 +98,16 @@ export global Store {
             end-date: "2025-03-02",
             title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
             plan: "A simple plane",
-            state: RecordState.Unfinished,
+            state: RecordState.Running,
+            tags: ["Study", "Project", "人物"],
+        },
+        {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
+            plan: "A simple plane",
+            state: RecordState.NotStarted,
             tags: ["Study", "Project", "人物"],
         },
         {

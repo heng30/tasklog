@@ -52,11 +52,20 @@ export global Logic {
 
     //////////////////////////////// Logic Start  ////////////////////////////////
 
-    callback new-record();
+    callback refresh-records();
+    callback new-record(entry: RecordEntry);
+    callback update-record(entry: RecordEntry);
+    callback delete-record(index: int);
     callback search-record(keyword: string);
     callback update-record-state(state: RecordState);
-    callback update-record(entry: RecordEntry);
     callback open-record-dialog(index: int);
+
+    pure callback remain-days(start_day: string, end_day: string) -> int;
+    pure callback remain-days-numbers(start_day: string, end_day: string) -> [int];
+    remain-days-numbers(start-date, end-date) => {
+        return [4, 5, 8];
+    }
+
 
     //////////////////////////////// Logic End  ////////////////////////////////
 }

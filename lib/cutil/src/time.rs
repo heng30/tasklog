@@ -23,6 +23,10 @@ pub fn get_current_date() -> Date {
     }
 }
 
+pub fn timestamp() -> i64 {
+    Local::now().timestamp()
+}
+
 pub fn get_calendar_matrix(year: i32, month: u32) -> Result<Vec<Vec<Date>>> {
     let mut matrix: Vec<Vec<Date>> = vec![vec![]; 6];
 
@@ -56,6 +60,23 @@ pub fn get_calendar_matrix(year: i32, month: u32) -> Result<Vec<Vec<Date>>> {
     }
 
     Ok(matrix)
+}
+
+pub fn date_str_to_timestamp(date_str: &str) -> Result<i64> {
+    let date = NaiveDate::parse_from_str(date_str, "%Y-%m-%d")?;
+
+    let datetime = date
+        .and_hms_opt(0, 0, 0)
+        .ok_or(anyhow::anyhow!("Invalid time specification"))?;
+
+    Ok(datetime.and_utc().timestamp())
+}
+
+pub fn diff_dates_to_days(start_date: &str, end_date: &str) -> Result<i64> {
+    let start_timestamp = date_str_to_timestamp(start_date)?;
+    let end_timestamp = date_str_to_timestamp(end_date)?;
+
+    Ok((end_timestamp - start_timestamp) / (24 * 60 * 60))
 }
 
 #[cfg(test)]
@@ -93,5 +114,16 @@ mod tests {
         assert_eq!(matrix_feb[4][6].month, 3); // 最后几天是3月的
 
         Ok(())
+    }
+
+    #[test]
+    fn test_date_str_to_timestamp() {
+        assert!(date_str_to_timestamp("2005-12-09").is_ok());
+        assert!(date_str_to_timestamp("2005-09-xxx").is_err());
+    }
+
+    #[test]
+    fn test_diff_dates_to_days() {
+        assert_eq!(diff_dates_to_days("2005-12-09", "2005-12-10").unwrap(), 1);
     }
 }

@@ -20,7 +20,7 @@ export component RecordEditDialog inherits Dialog {
     init => {
         if (Store.edit-record-entry.uuid.is-empty) {
             Store.edit-record-entry = clean-entry;
-            Store.edit-record-entry.state = RecordState.Unfinished;
+            Store.edit-record-entry.state = RecordState.Running;
             Store.edit-record-entry.start-date = date-str(current-date);
             Store.edit-record-entry.end-date = date-str(current-date);
         }
@@ -92,7 +92,6 @@ export component RecordEditDialog inherits Dialog {
                     is-show-icon: true;
                     icon: Icons.success;
                     placeholder-text: Logic.tr("Enter tag");
-                    text: Store.edit-record-entry.title;
 
                     function add-tag(tag: string) {
                         if (Store.edit-record-entry.tags.length == 0) {
@@ -111,10 +110,12 @@ export component RecordEditDialog inherits Dialog {
 
                     clicked => {
                         add-tag(self.text);
+                        self.focus();
                     }
 
                     accepted => {
                         add-tag(self.text);
+                        self.focus();
                     }
                 }
 
@@ -139,8 +140,8 @@ export component RecordEditDialog inherits Dialog {
                         visible: !self.text.is-empty;
                         text: tag-name(Store.edit-record-entry.tags, index);
                         background: Theme.tag-colors[index];
-                        text-color: self.background.darker(150%);
                         is-show-close-btn: true;
+                        font-size: Theme.title5-font-size;
 
                         close => {
                             if (Store.edit-record-entry.tags.length == 1) {
@@ -185,11 +186,20 @@ export component RecordEditDialog inherits Dialog {
     }
 
     ok-clicked => {
-        Logic.switch-popup(PopupIndex.None);
-
         Store.edit-record-entry.start-date = start-date-lineedit.text;
         Store.edit-record-entry.end-date = end-date-lineedit.text;
         Store.edit-record-entry.title = task-name-lineedit.text;
-        Logic.update-record(Store.edit-record-entry);
+
+        if (Store.edit-record-entry.start-date >= Store.edit-record-entry.end-date) {
+            Util.show-toast(Logic.tr("End date should greater than start date."), ToastStatus.Warning);
+            return;
+        }
+        Logic.switch-popup(PopupIndex.None);
+
+        if (Store.edit-record-entry.uuid.is-empty) {
+            Logic.new-record(Store.edit-record-entry);
+        } else {
+            Logic.update-record(Store.edit-record-entry);
+        }
     }
 }

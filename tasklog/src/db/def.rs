@@ -66,7 +66,8 @@ impl SerializeAs<UIRecordState> for RecordState {
         S: Serializer,
     {
         let status = match source {
-            UIRecordState::Unfinished => "Unfinished",
+            UIRecordState::NotStarted => "NotStarted",
+            UIRecordState::Running => "Running",
             UIRecordState::Finished => "Finished",
             UIRecordState::Giveup => "Giveup",
             UIRecordState::Timeout => "Timeout",
@@ -83,7 +84,8 @@ impl<'de> DeserializeAs<'de, UIRecordState> for RecordState {
     {
         let status = String::deserialize(deserializer)?;
         let status = match status.as_str() {
-            "Unfinished" => UIRecordState::Unfinished,
+            "NotStarted" => UIRecordState::NotStarted,
+            "Running" => UIRecordState::Running,
             "Finished" => UIRecordState::Finished,
             "Giveup" => UIRecordState::Giveup,
             "Timeout" => UIRecordState::Timeout,

@@ -1,11 +1,16 @@
+use super::{toast, tr::tr};
 use crate::{
     db::{
         self,
         def::{RecordEntry, RECORD_TABLE as DB_TABLE},
     },
-    slint_generatedAppWindow::{AppWindow, Logic, PopupIndex, RecordEntry as UIRecordEntry, Store},
+    slint_generatedAppWindow::{
+        AppWindow, Logic, PopupIndex, RecordEntry as UIRecordEntry, RecordState as UIRecordState,
+        Store,
+    },
 };
-use slint::{ComponentHandle, Model, ModelRc, VecModel, Weak};
+use slint::{ComponentHandle, Model, ModelRc, VecModel};
+use uuid::Uuid;
 
 #[macro_export]
 macro_rules! store_current_record_entries {
@@ -33,6 +38,40 @@ pub fn init(ui: &AppWindow) {
     record_init(ui);
 
     let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_new_record(move |mut entry| {
+        let ui = ui_handle.unwrap();
+        entry.uuid = Uuid::new_v4().to_string().into();
+        entry.state = calc_state(&entry.start_date, &entry.end_date, entry.state)
+            .unwrap_or(UIRecordState::Running);
+        store_current_record_entries!(ui).insert(0, entry.clone());
+        add_db_entry(&ui, entry.into());
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_update_record(move |mut entry| {
+        let ui = ui_handle.unwrap();
+        if let Some(index) = store_current_record_entries!(ui)
+            .iter()
+            .position(|item| item.uuid == &entry.uuid)
+        {
+            entry.state = calc_state(&entry.start_date, &entry.end_date, entry.state)
+                .unwrap_or(UIRecordState::Running);
+            store_current_record_entries!(ui).set_row_data(index, entry.clone());
+            update_db_entry(&ui, entry.into());
+        }
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_delete_record(move |index| {
+        let ui = ui_handle.unwrap();
+        let index = index as usize;
+
+        let entry = store_current_record_entries!(ui).row_data(index).unwrap();
+        store_current_record_entries!(ui).remove(index);
+        delete_db_entry(&ui, entry.uuid.into());
+    });
+
+    let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_open_record_dialog(move |index| {
         let ui = ui_handle.unwrap();
 
@@ -51,23 +90,72 @@ pub fn init(ui: &AppWindow) {
             .invoke_switch_popup(PopupIndex::RecordEdit);
     });
 
+    let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_search_record(move |keyword| {
-        // let values = entries
-        //     .iter()
-        //     .flat_map(|entry| {
-        //         if entry.children.row_count() > 0 {
-        //             entry
-        //                 .children
-        //                 .iter()
-        //                 .map(|item| item.title)
-        //                 .collect::<Vec<_>>()
-        //         } else {
-        //             vec![entry.category]
-        //         }
-        //     })
-        //     .collect::<Vec<_>>();
-        // ModelRc::new(VecModel::from_slice(&values[..]))
+        let ui = ui_handle.unwrap();
+
+        if keyword.is_empty() {
+            let entries = store_current_record_entries_cache!(ui)
+                .iter()
+                .collect::<Vec<UIRecordEntry>>();
+
+            store_current_record_entries!(ui).set_vec(entries);
+            store_current_record_entries_cache!(ui).set_vec(vec![]);
+            return;
+        }
+
+        if store_current_record_entries_cache!(ui).row_count() == 0 {
+            let entries = store_current_record_entries!(ui)
+                .iter()
+                .collect::<Vec<UIRecordEntry>>();
+            store_current_record_entries_cache!(ui).set_vec(entries);
+        }
+
+        let entries = store_current_record_entries_cache!(ui)
+            .iter()
+            .collect::<Vec<UIRecordEntry>>();
+
+        let filter_entries = entries
+            .iter()
+            .filter_map(|entry| {
+                if entry.title.contains(keyword.as_str()) {
+                    Some(entry.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        store_current_record_entries!(ui).set_vec(filter_entries);
     });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_refresh_records(move || {
+        let ui = ui_handle.unwrap();
+        record_init(&ui);
+    });
+
+    ui.global::<Logic>().on_remain_days(|start_date, end_date| {
+        cutil::time::diff_dates_to_days(&start_date, &end_date).unwrap_or_default() as i32
+    });
+
+    ui.global::<Logic>()
+        .on_remain_days_numbers(|start_date, end_date| {
+            let days =
+                cutil::time::diff_dates_to_days(&start_date, &end_date).unwrap_or_default() as i32;
+
+            let days_numbers = if days < 10 {
+                vec![0, days]
+            } else {
+                format!("{days}")
+                    .chars()
+                    .into_iter()
+                    .map(|n| n.to_digit(10).unwrap_or_default() as i32)
+                    .collect::<Vec<i32>>()
+            };
+
+            ModelRc::new(VecModel::from_slice(&days_numbers))
+        });
 }
 
 fn record_init(ui: &AppWindow) {
@@ -92,11 +180,132 @@ fn record_init(ui: &AppWindow) {
         _ = slint::invoke_from_event_loop(move || {
             let entries = entries
                 .into_iter()
+                .map(|mut entry: RecordEntry| {
+                    if let Some(state) = calc_state(
+                        entry.start_date.as_str(),
+                        entry.end_date.as_str(),
+                        entry.state,
+                    ) {
+                        entry.state = state;
+                    }
+                    entry
+                })
                 .map(|entry: RecordEntry| entry.into())
                 .rev()
                 .collect::<Vec<UIRecordEntry>>();
 
             store_current_record_entries!(ui.unwrap()).set_vec(entries);
         });
+    });
+}
+
+fn calc_state(
+    start_date: &str,
+    end_date: &str,
+    current_state: UIRecordState,
+) -> Option<UIRecordState> {
+    match current_state {
+        UIRecordState::Giveup | UIRecordState::Finished => None,
+        UIRecordState::NotStarted => match cutil::time::date_str_to_timestamp(end_date) {
+            Ok(end_timestamp) => {
+                let current_timestamp = cutil::time::timestamp();
+                if current_timestamp > end_timestamp {
+                    Some(UIRecordState::Timeout)
+                } else {
+                    match cutil::time::date_str_to_timestamp(start_date) {
+                        Ok(start_timestamp) => {
+                            if current_timestamp >= start_timestamp {
+                                Some(UIRecordState::Running)
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+            }
+            _ => None,
+        },
+        UIRecordState::Running => match cutil::time::date_str_to_timestamp(start_date) {
+            Ok(start_timestamp) => {
+                let current_timestamp = cutil::time::timestamp();
+                if current_timestamp < start_timestamp {
+                    Some(UIRecordState::NotStarted)
+                } else {
+                    match cutil::time::date_str_to_timestamp(end_date) {
+                        Ok(end_timestamp) => {
+                            if current_timestamp > end_timestamp {
+                                Some(UIRecordState::Timeout)
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+            }
+            _ => None,
+        },
+        UIRecordState::Timeout => match cutil::time::date_str_to_timestamp(start_date) {
+            Ok(start_timestamp) => {
+                let current_timestamp = cutil::time::timestamp();
+                if current_timestamp < start_timestamp {
+                    Some(UIRecordState::NotStarted)
+                } else {
+                    match cutil::time::date_str_to_timestamp(end_date) {
+                        Ok(end_timestamp) => {
+                            if current_timestamp <= end_timestamp {
+                                Some(UIRecordState::Running)
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+            }
+            _ => None,
+        },
+    }
+}
+
+fn add_db_entry(ui: &AppWindow, entry: RecordEntry) {
+    let ui = ui.as_weak();
+    tokio::spawn(async move {
+        let data = serde_json::to_string(&entry).unwrap();
+        match db::entry::insert(DB_TABLE, &entry.uuid, &data).await {
+            Err(e) => toast::async_toast_warn(
+                ui,
+                format!("{}. {}: {e:?}", tr("Add entry failed"), tr("Reason")),
+            ),
+            _ => (),
+        }
+    });
+}
+
+fn update_db_entry(ui: &AppWindow, entry: RecordEntry) {
+    let ui = ui.as_weak();
+    tokio::spawn(async move {
+        let data = serde_json::to_string(&entry).unwrap();
+        match db::entry::update(DB_TABLE, &entry.uuid, &data).await {
+            Err(e) => toast::async_toast_warn(
+                ui,
+                format!("{}. {}: {e:?}", tr("Update entry failed"), tr("Reason")),
+            ),
+            _ => (),
+        }
+    });
+}
+
+pub fn delete_db_entry(ui: &AppWindow, uuid: String) {
+    let ui = ui.as_weak();
+    tokio::spawn(async move {
+        match db::entry::delete(DB_TABLE, uuid.as_str()).await {
+            Err(e) => toast::async_toast_warn(
+                ui,
+                format!("{}. {}: {e:?}", tr("Remove entry failed"), tr("Reason")),
+            ),
+            _ => toast::async_toast_success(ui, tr("Remove entry successfully")),
+        }
     });
 }

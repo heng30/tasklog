@@ -4,7 +4,7 @@ import { Theme, Icons, Store, Util, Logic } from "../def.slint";
 import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress, PopupActionSetting, PasswordSetting } from "../../base/widgets.slint";
 
 component StatePopup inherits PopupWindow {
-    private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Unfinished")];
+    private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Running")];
 
     callback update-record-state(state: string);
 
@@ -70,6 +70,16 @@ component TopBar inherits HorizontalLayout {
             }
 
             IconBtn {
+                icon: Icons.refresh;
+                hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                clicked => {
+                    search.text = "";
+                    Logic.refresh-records();
+                }
+            }
+
+            IconBtn {
                 icon: Icons.add-light;
                 hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
@@ -87,47 +97,50 @@ component TaskCard inherits Rectangle {
 
     private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
 
-    function remain-days(start-date: string, end-date: string) -> [int] {
-        return [4, 5, 8];
-    }
-
     function calc-progress(start-date: string, end-date: string) -> float {
+        // TODO
         return 0.5;
     }
 
     function state-color(state: RecordState) -> color {
-        if (state == RecordState.Unfinished) {
+        if (state == RecordState.Running) {
             return Theme.thirdly-brand-color;
         } else if (state == RecordState.Finished) {
             return Theme.success-color;
         } else if (state == RecordState.Giveup) {
             return Theme.danger-color;
-        } else {
+        } else if (state == RecordState.Timeout) {
             return Theme.warning-color;
+        } else {
+            return Theme.info-color;
         }
     }
 
     function state-to-str(state: RecordState) -> string {
-        if (state == RecordState.Unfinished) {
-            return Logic.tr("Unfinished");
+        if (state == RecordState.Running) {
+            return Logic.tr("Running");
         } else if (state == RecordState.Finished) {
             return Logic.tr("Finished");
         } else if (state == RecordState.Giveup) {
             return Logic.tr("Giveup");
-        } else {
+        } else if (state == RecordState.Timeout) {
             return Logic.tr("Timeout");
+        } else {
+            return Logic.tr("NotStarted");
         }
     }
 
     function str-to-state(state: string) -> RecordState {
-        if (state == Logic.tr("Unfinished")) {
-            return RecordState.Unfinished;
+        if (state == Logic.tr("Running")) {
+            return RecordState.Running;
         } else if (state == Logic.tr("Finished")) {
             return RecordState.Finished;
         } else if (state == Logic.tr("Giveup")) {
             return RecordState.Giveup;
-        } else {
+        } else if (state == Logic.tr("Timeout")) {
             return RecordState.Timeout;
+        } else {
+            return RecordState.NotStarted;
         }
     }
 
@@ -231,17 +244,19 @@ component TaskCard inherits Rectangle {
             }
 
             led-number := HorizontalLedNumber {
+                private property <[int]> not-start-numbners: [0, 0];
+
                 number-spacing: Theme.spacing * 2;
                 number-padding: Theme.padding * 4;
                 number-size: Theme.icon-size * 2;
                 colorize: state-color(entry.state);
-                numbers: remain-days(entry.start-date, entry.end-date);
+                numbers: entry.state == RecordState.NotStarted ? not-start-numbners : Logic.remain-days-numbers(entry.start-date, entry.end-date);
             }
 
             Label {
                 x: Math.min(led-number.x + led-number.preferred-width - Theme.padding * 2, root.width - self.preferred-width);
                 y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
-                text: entry.start-date != entry.end-date ? Logic.tr("days") : Logic.tr("day");
+                text: Logic.remain-days(entry.start-date,entry.end-date) > 1 ? Logic.tr("days") : Logic.tr("day");
                 color: Theme.placeholder-text-color;
             }
         }
@@ -277,7 +292,6 @@ component TaskCard inherits Rectangle {
                     visible: !self.text.is-empty;
                     text: index == 0 && entry.tags.length >= 1 ? entry.tags[index] : (entry.tags.length >= 2 && index == 1 ? entry.tags[index] : (entry.tags.length >= 3 && index == 2 ? entry.tags[index] : ""));
                     background: Theme.tag-colors[index];
-                    text-color: self.background.darker(150%);
                 }
             }
         }
@@ -297,8 +311,8 @@ component TaskCard inherits Rectangle {
             }
 
             Label {
-                text: Logic.tr("Ends on ") + entry.end-date;
-                color: Theme.placeholder-text-color;
+                text: entry.state == RecordState.NotStarted ? Logic.tr("Start on") + " " + entry.start-date : Logic.tr("Ends on") + " " + entry.end-date;
+                color: entry.state == RecordState.NotStarted ? Theme.danger-color : Theme.placeholder-text-color;
             }
         }
     }
