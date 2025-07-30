@@ -74,7 +74,7 @@ component TopBar inherits HorizontalLayout {
                 hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
                 clicked => {
-                    Logic.new-record();
+                    Logic.open-record-dialog(-1);
                 }
             }
         }
@@ -159,7 +159,7 @@ component TaskCard inherits Rectangle {
 
     ta := TouchArea { }
 
-    progress-bar := CircleProgress {
+    if !entry.plan.is-empty: CircleProgress {
         x: Theme.padding * 2;
         y: Theme.padding * 2;
         radius: Theme.icon-size * 0.8;

@@ -4,7 +4,7 @@ import { Date, ToastStatus} from "../../base/def.slint";
 import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, DatePickerPopup, Tag, Dialog, SettingDetailInner, SettingDetailInnerVbox, SettingDetailLabel } from "../../base/widgets.slint";
 
 export component RecordEditDialog inherits Dialog {
-    title: Store.edit-record-entry.uuid.is-empty ? Logic.tr("New") : Logic.tr("Edit");
+    title: Store.edit-record-entry.uuid.is-empty ? Logic.tr("New Task") : Logic.tr("Edit Task");
     is-prevent-event-forward: true;
 
     in-out property <length> inner-height: 650px;
@@ -27,7 +27,7 @@ export component RecordEditDialog inherits Dialog {
     }
 
     VerticalLayout {
-        height: root.inner-height;
+        height: Math.min(root.inner-height, self.preferred-height);
 
         SettingDetailInner {
             SettingDetailInnerVbox {
