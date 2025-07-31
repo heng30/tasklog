@@ -34,6 +34,19 @@ component HorizontalHomeIconsBar inherits Rectangle {
         }
 
         IconBtn {
+            icon: Icons.archive-fill;
+            icon-size: root.icon-size;
+            show-icon-hover-background: root.show-icon-hover-background;
+            is-show-tip: root.is-show-tip;
+            tip-position: root.tip-position;
+            tip: Logic.tr("archive");
+
+            clicked => {
+                Logic.switch-tab(TabIndex.Archive);
+            }
+        }
+
+        IconBtn {
             icon: Icons.statistic-fill;
             icon-size: root.icon-size;
             show-icon-hover-background: root.show-icon-hover-background;
@@ -119,6 +132,19 @@ component VerticalStatusBar inherits Rectangle {
 
                 clicked => {
                     Logic.switch-tab(TabIndex.Home);
+                }
+            }
+
+            IconBtn {
+                icon: Icons.archive-fill;
+                icon-size: root.icon-size;
+                show-icon-hover-background: root.show-icon-hover-background;
+                is-show-tip: root.is-show-tip;
+                tip-position: root.tip-position;
+                tip: Logic.tr("archive");
+
+                clicked => {
+                    Logic.switch-tab(TabIndex.Archive);
                 }
             }
 

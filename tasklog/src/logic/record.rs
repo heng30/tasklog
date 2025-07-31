@@ -5,9 +5,10 @@ use crate::{
         def::{RecordEntry, RECORD_TABLE as DB_TABLE},
     },
     slint_generatedAppWindow::{
-        AppWindow, Logic, PopupIndex, RecordEntry as UIRecordEntry, RecordState as UIRecordState,
-        Store,
+        AppWindow, Logic, PopupIndex, RecordEntry as UIRecordEntry,
+        RecordPlanEntry as UIRecordPlanEntry, RecordState as UIRecordState, Store,
     },
+    toast_success,
 };
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use uuid::Uuid;
@@ -31,6 +32,16 @@ macro_rules! store_current_record_entries_cache {
             .as_any()
             .downcast_ref::<VecModel<UIRecordEntry>>()
             .expect("We know we set a VecModel<UIRecordEntry> for cache earlier")
+    };
+}
+
+#[macro_export]
+macro_rules! store_current_record_plan {
+    ($entry:expr) => {
+        $entry
+            .as_any()
+            .downcast_ref::<VecModel<UIRecordPlanEntry>>()
+            .expect("We know we set a VecModel<UIRecordPlanEntry> earlier")
     };
 }
 
@@ -62,13 +73,27 @@ pub fn init(ui: &AppWindow) {
     });
 
     let ui_handle = ui.as_weak();
-    ui.global::<Logic>().on_delete_record(move |index| {
+    ui.global::<Logic>().on_remove_record(move |index| {
         let ui = ui_handle.unwrap();
         let index = index as usize;
 
         let entry = store_current_record_entries!(ui).row_data(index).unwrap();
         store_current_record_entries!(ui).remove(index);
         delete_db_entry(&ui, entry.uuid.into());
+        toast_success!(ui, tr("Remove entry successfully"));
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_archive_record(move |index| {
+        let ui = ui_handle.unwrap();
+        let index = index as usize;
+
+        let entry = store_current_record_entries!(ui).row_data(index).unwrap();
+        store_current_record_entries!(ui).remove(index);
+        delete_db_entry(&ui, entry.uuid.clone().into());
+
+        ui.global::<Logic>().invoke_add_archive(entry);
+        toast_success!(ui, tr("Archive entry successfully"));
     });
 
     let ui_handle = ui.as_weak();
@@ -190,6 +215,36 @@ pub fn init(ui: &AppWindow) {
             store_current_record_entries!(ui).set_row_data(index, entry.clone());
             update_db_entry(&ui, entry.into());
         });
+
+    ui.global::<Logic>().on_record_progress(|entry| {
+        let row_count = store_current_record_plan!(entry.plan).row_count();
+        if row_count > 0 {
+            let mut finished_counts = 0;
+            for item in entry.plan.iter() {
+                if item.is_finished {
+                    finished_counts += 1;
+                }
+            }
+
+            return finished_counts as f32 / row_count as f32;
+        } else {
+            let current_date = cutil::time::local_now("%Y-%m-%d");
+
+            let diff_1 = cutil::time::diff_dates_to_days(&entry.start_date, &current_date)
+                .unwrap_or_default()
+                .max(0);
+
+            let diff_2 = cutil::time::diff_dates_to_days(&entry.start_date, &entry.end_date)
+                .unwrap_or_default()
+                .max(1);
+
+            if diff_1 >= diff_2 {
+                return 1.0_f32;
+            } else {
+                diff_1 as f32 / diff_2 as f32
+            }
+        }
+    });
 
     ui.global::<Logic>().on_remain_days(|start_date, end_date| {
         cutil::time::diff_dates_to_days(&start_date, &end_date)
@@ -364,7 +419,7 @@ pub fn delete_db_entry(ui: &AppWindow, uuid: String) {
                 ui,
                 format!("{}. {}: {e:?}", tr("Remove entry failed"), tr("Reason")),
             ),
-            _ => toast::async_toast_success(ui, tr("Remove entry successfully")),
+            _ => (),
         }
     });
 }

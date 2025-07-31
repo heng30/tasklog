@@ -9,4 +9,8 @@ pub async fn init(db_path: &str) {
     entry::new(def::RECORD_TABLE)
         .await
         .expect("record table failed");
+
+    entry::new(def::ARCHIVE_TABLE)
+        .await
+        .expect("archive table failed");
 }

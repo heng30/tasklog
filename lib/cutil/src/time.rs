@@ -23,6 +23,21 @@ pub fn get_current_date() -> Date {
     }
 }
 
+pub fn parse_date_str(date: &str) -> Result<Date> {
+    let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")?;
+
+    let datetime = date
+        .and_hms_opt(0, 0, 0)
+        .ok_or(anyhow::anyhow!("Invalid time specification"))?
+        .and_utc();
+
+    Ok(Date {
+        year: datetime.year(),
+        month: datetime.month(),
+        day: datetime.day(),
+    })
+}
+
 pub fn timestamp() -> i64 {
     Local::now().timestamp()
 }

@@ -30,11 +30,24 @@ pub fn init(ui: &AppWindow) {
                 }
                 "archive-record" => {
                     let current_index = user_data.parse::<i32>().unwrap();
-                    // TODO
+                    ui.global::<Logic>().invoke_archive_record(current_index);
                 }
                 "plan-record" => {
-                    let current_index = user_data.parse::<i32>().unwrap();
+                    let _current_index = user_data.parse::<i32>().unwrap();
                     // TODO
+                }
+                "remove-archive" => {
+                    ui.global::<ConfirmDialogSetting>().invoke_set(
+                        true,
+                        tr("Warning").into(),
+                        tr("Delete or not?").into(),
+                        "remove-archive".into(),
+                        user_data,
+                    );
+                }
+                "recover-archive" => {
+                    let current_index = user_data.parse::<i32>().unwrap();
+                    ui.global::<Logic>().invoke_recover_archive(current_index);
                 }
                 _ => (),
             }

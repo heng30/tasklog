@@ -17,7 +17,11 @@ pub fn init(ui: &AppWindow) {
                 }
                 "remove-record" => {
                     let current_index = user_data.parse::<i32>().unwrap();
-                    ui.global::<Logic>().invoke_delete_record(current_index);
+                    ui.global::<Logic>().invoke_remove_record(current_index);
+                }
+                "remove-archive" => {
+                    let current_index = user_data.parse::<i32>().unwrap();
+                    ui.global::<Logic>().invoke_remove_archive(current_index);
                 }
                 _ => (),
             }

@@ -42,6 +42,9 @@ mod tr;
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 mod record;
 
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+mod archive;
+
 pub fn init(ui: &AppWindow) {
     #[cfg(any(
         target_os = "windows",
@@ -60,8 +63,9 @@ pub fn init(ui: &AppWindow) {
     confirm_dialog::init(ui);
     popup_action::init(ui);
 
+    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
     {
-        #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
         record::init(ui);
+        archive::init(ui);
     }
 }

@@ -1,6 +1,6 @@
-import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry } from "store.slint";
+import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry } from "store.slint";
 
-import { SideBarEntry } from "base/def.slint";
+import { Theme } from "theme.slint";
 
 export global Logic {
     callback update-cache-size();
@@ -55,10 +55,20 @@ export global Logic {
     callback refresh-records();
     callback new-record(entry: RecordEntry);
     callback update-record(entry: RecordEntry);
-    callback delete-record(index: int);
+    callback remove-record(index: int);
+    callback archive-record(index: int);
     callback search-record(keyword: string);
     callback update-record-state(index: int, state: RecordState);
     callback open-record-dialog(index: int);
+
+    callback add-archive(entry: RecordEntry);
+    callback recover-archive(index: int);
+    callback remove-archive(index: int);
+
+    pure callback record-progress(entry: RecordEntry) -> float;
+    record-progress(entry) => {
+        return 0.5;
+    }
 
     pure callback remain-days(start_day: string, end_day: string) -> int;
     pure callback remain-days-numbers(start_day: string, end_day: string) -> [int];
@@ -66,6 +76,47 @@ export global Logic {
         return [4, 5, 8];
     }
 
+    pure public function state-color(state: RecordState) -> color {
+        if (state == RecordState.Running) {
+            return Theme.thirdly-brand-color;
+        } else if (state == RecordState.Finished) {
+            return Theme.success-color;
+        } else if (state == RecordState.Giveup) {
+            return Theme.danger-color;
+        } else if (state == RecordState.Timeout) {
+            return Theme.warning-color;
+        } else {
+            return Theme.info-color;
+        }
+    }
+
+    pure public function state-to-str(state: RecordState) -> string {
+        if (state == RecordState.Running) {
+            return Logic.tr("Running");
+        } else if (state == RecordState.Finished) {
+            return Logic.tr("Finished");
+        } else if (state == RecordState.Giveup) {
+            return Logic.tr("Giveup");
+        } else if (state == RecordState.Timeout) {
+            return Logic.tr("Timeout");
+        } else {
+            return Logic.tr("NotStarted");
+        }
+    }
+
+    pure public function str-to-state(state: string) -> RecordState {
+        if (state == Logic.tr("Running")) {
+            return RecordState.Running;
+        } else if (state == Logic.tr("Finished")) {
+            return RecordState.Finished;
+        } else if (state == Logic.tr("Giveup")) {
+            return RecordState.Giveup;
+        } else if (state == Logic.tr("Timeout")) {
+            return RecordState.Timeout;
+        } else {
+            return RecordState.NotStarted;
+        }
+    }
 
     //////////////////////////////// Logic End  ////////////////////////////////
 }

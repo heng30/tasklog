@@ -4,6 +4,41 @@ import { Theme, Icons, Store, Util, Logic } from "../def.slint";
 import { RecordState, RecordEntry, PopupIndex } from "../../store.slint";
 import { Search, Label, IconBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress, PopupActionSetting } from "../../base/widgets.slint";
 
+component BlankWelcome inherits HorizontalLayout {
+    padding: Theme.padding * 2;
+    padding-top: Theme.padding * 8;
+    opacity: Theme.golden-ratio;
+
+    VerticalLayout {
+        alignment: LayoutAlignment.center;
+        spacing: Theme.spacing * 2;
+
+        Label {
+            text: Logic.tr("Welcome to the TaskLog!");
+            font-size: Theme.title1-font-size + 10px;
+            font-weight: Theme.bold-font-weight;
+            horizontal-alignment: TextHorizontalAlignment.center;
+        }
+
+        Label {
+            text: Logic.tr("You can trace your tasks");
+            font-size: Theme.title3-font-size;
+            font-weight: Theme.bold-font-weight;
+            horizontal-alignment: TextHorizontalAlignment.center;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            padding-top: Theme.padding * 4;
+
+            Image {
+                width: Math.min(root.width * 0.8, self.preferred-width);
+                source: Icons.brand;
+            }
+        }
+    }
+}
+
 component StatePopup inherits PopupWindow {
     in-out property <RecordState> current-state;
 
@@ -114,53 +149,6 @@ component TaskCard inherits Rectangle {
 
     private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
 
-    function calc-progress(start-date: string, end-date: string) -> float {
-        // TODO
-        return 0.5;
-    }
-
-    function state-color(state: RecordState) -> color {
-        if (state == RecordState.Running) {
-            return Theme.thirdly-brand-color;
-        } else if (state == RecordState.Finished) {
-            return Theme.success-color;
-        } else if (state == RecordState.Giveup) {
-            return Theme.danger-color;
-        } else if (state == RecordState.Timeout) {
-            return Theme.warning-color;
-        } else {
-            return Theme.info-color;
-        }
-    }
-
-    function state-to-str(state: RecordState) -> string {
-        if (state == RecordState.Running) {
-            return Logic.tr("Running");
-        } else if (state == RecordState.Finished) {
-            return Logic.tr("Finished");
-        } else if (state == RecordState.Giveup) {
-            return Logic.tr("Giveup");
-        } else if (state == RecordState.Timeout) {
-            return Logic.tr("Timeout");
-        } else {
-            return Logic.tr("NotStarted");
-        }
-    }
-
-    function str-to-state(state: string) -> RecordState {
-        if (state == Logic.tr("Running")) {
-            return RecordState.Running;
-        } else if (state == Logic.tr("Finished")) {
-            return RecordState.Finished;
-        } else if (state == Logic.tr("Giveup")) {
-            return RecordState.Giveup;
-        } else if (state == Logic.tr("Timeout")) {
-            return RecordState.Timeout;
-        } else {
-            return RecordState.NotStarted;
-        }
-    }
-
     preferred-width: vbox.preferred-width;
     preferred-height: vbox.preferred-height;
     background: Theme.secondary-background;
@@ -189,15 +177,17 @@ component TaskCard inherits Rectangle {
 
     ta := TouchArea { }
 
-    if !entry.plan.is-empty: CircleProgress {
+    CircleProgress {
         x: Theme.padding * 2;
         y: Theme.padding * 2;
         radius: Theme.icon-size * 0.8;
         ring-width: Theme.padding;
         font-size: Theme.default-font-size * 2 / 3;
         finished-text: "100%";
+        finished-text-color: self.unfinished-text-color;
+        finished-text-background: self.unfinished-progress-color;
         finished-progress-color: led-number.colorize;
-        progress: calc-progress(entry.start-date, entry.end-date);
+        progress: Logic.record-progress(entry);
         height: self.width;
 
         TouchArea {
@@ -266,7 +256,7 @@ component TaskCard inherits Rectangle {
                 number-spacing: Theme.spacing * 2;
                 number-padding: Theme.padding * 4;
                 number-size: Theme.icon-size * 2;
-                colorize: state-color(entry.state);
+                colorize: Logic.state-color(entry.state);
                 numbers: entry.state == RecordState.NotStarted ? Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date) : Logic.remain-days-numbers(entry.start-date, entry.end-date);
             }
 
@@ -318,7 +308,7 @@ component TaskCard inherits Rectangle {
             padding-top: Theme.padding * 4;
 
             state-btn := TextBtnWithoutIcon {
-                text: state-to-str(entry.state);
+                text: Logic.state-to-str(entry.state);
                 text-color: led-number.colorize;
                 font-weight: Theme.bold-font-weight;
 
@@ -340,13 +330,15 @@ component TaskCard inherits Rectangle {
         current-state: entry.state;
 
         update-record-state(value) => {
-            Logic.update-record-state(current-index, str-to-state(value));
+            Logic.update-record-state(current-index, Logic.str-to-state(value));
         }
     }
 }
 
 export component Record inherits Rectangle {
     GainFocus { }
+
+    if Store.record-entries.length == 0: BlankWelcome { }
 
     VerticalLayout {
         private property <length> task-card-width: Theme.icon-size * 12;
@@ -360,6 +352,9 @@ export component Record inherits Rectangle {
         }
 
         ListView {
+            vertical-scrollbar-policy: as-needed;
+            horizontal-scrollbar-policy: always-off;
+
             for row-index in row-counts: VerticalLayout {
                 padding: Theme.padding * 4;
 

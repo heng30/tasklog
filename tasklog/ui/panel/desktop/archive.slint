@@ -1,182 +1,88 @@
 import { ListView } from "std-widgets.slint";
+import { RecordState } from "../../store.slint";
+import { Theme, Icons, Store, Logic } from "../def.slint";
+import { Label, IconBtn, PopupActionSetting, CenterLayout, NoMessageImg } from "../../base/widgets.slint";
 
-import { RecordState, SortRecord } from "../../store.slint";
-import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus } from "../../base/widgets.slint";
-
-export component TableHeader inherits Rectangle {
-    in-out property <length> title-start-date-width;
-    in-out property <length> title-end-date-width;
-
-    private property <length> header-font-size: Theme.title5-font-size;
-
-    background: Theme.table-header-color;
-
-    GainFocus { }
-
-    HorizontalLayout {
-        padding-left: Theme.padding * 4;
-        padding-right: Theme.padding * 4;
-        padding-top: Theme.padding * 3;
-        padding-bottom: Theme.padding * 3;
-        alignment: LayoutAlignment.space-between;
-
-        HorizontalLayout {
-            alignment: LayoutAlignment.start;
-            spacing: Theme.spacing * 4;
-
-            title-start-date := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: title-start-date-width;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("Start");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.Start);
-                    }
-                }
-            }
-
-            title-end-date := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: title-end-date-width;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("End");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.End);
-                    }
-                }
-            }
-
-            title-goal := VerticalLayout {
-                alignment: LayoutAlignment.center;
-                width: 30%;
-
-                TextBtnWithoutIcon {
-                    text: Logic.tr("Goal");
-                    font-weight: Theme.bold-font-weight;
-                    font-size: header-font-size;
-                    hpadding: 0px;
-
-                    clicked => {
-                        Logic.sort-record(SortRecord.Goal);
-                    }
-                }
-            }
-        }
-
-        HorizontalLayout {
-            spacing: Theme.spacing * 3;
-            padding-left: Theme.padding * 4;
-
-            HorizontalLayout {
-                search := Search {
-                    gain-focus-when-clicked: false;
-
-                    search(text) => {
-                        Logic.search-record(text);
-                    }
-
-                    edited(text) => {
-                        Logic.search-record(text);
-                    }
-                }
-            }
-
-            IconBtn {
-                icon: Icons.add-light;
-                clicked => {
-                    Logic.add-record();
-                }
-            }
-        }
-    }
-}
+component CellItem inherits Label { }
 
 export component TableBody inherits ListView {
-    in-out property <length> title-start-date-width;
-    in-out property <length> title-end-date-width;
+    private property <length> index-width;
+    private property <length> date-width;
+    private property <length> state-width;
+    private property <length> spent-width;
+    private property <length> progress-width;
 
-    function progress-color(state: RecordState) -> color {
-        if (state == RecordState.Unfinish) {
-            return Theme.thirdly-brand-color;
-        } else if (state == RecordState.Finished) {
-            return Theme.success-color;
-        } else if (state == RecordState.Giveup) {
-            return Theme.danger-color;
-        } else {
-            return Theme.warning-color;
-        }
-    }
-
-    // TODO
-    function calc-progress(start-date: string, end-date: string) -> float {
-        return 0.5;
-    }
-
-    for entry[index] in Store.record-entries: vbox := VerticalLayout {
+    for entry[index] in Store.archive-entries: vbox := VerticalLayout {
         private property <bool> is-hover;
-        private property <bool> is-edit-title;
 
         Rectangle {
-            background: (gf.has-hover || is-hover) ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
+            background: ta.has-hover ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
 
-            gf := GainFocus { }
+            ta := TouchArea { }
 
             HorizontalLayout {
-                spacing: Theme.spacing * 4;
+                spacing: Theme.spacing * 8;
                 padding-left: Theme.padding * 4;
                 padding-right: Theme.padding * 4;
                 padding-top: Theme.padding * 3;
                 padding-bottom: Theme.padding * 3;
 
-                Label {
+                CellItem {
                     init => {
-                        title-start-date-width = self.preferred-width;
+                        index-width = Math.max(self.preferred-width, index-width);
                     }
+
+                    width: index-width;
+                    text: index + 1;
+                }
+
+                CellItem {
+                    init => {
+                        date-width = Math.max(self.preferred-width, date-width);
+                    }
+
+                    width: date-width;
                     text: entry.start-date;
                 }
 
-                Label {
-                    init => {
-                        title-end-date-width = self.preferred-width;
-                    }
-                    text: entry.end-date;
-                }
+                CellItem {
+                    private property <int> days: Logic.remain-days(entry.start-date, entry.end-date);
 
-                Label {
-                    width: 30%;
-                    text: entry.title;
-                    overflow: elide;
+                    init => {
+                        spent-width = Math.max(self.preferred-width, spent-width);
+                    }
+
+                    width: spent-width;
+                    text: days + " " + (days > 1 ? "days" : "day");
                 }
 
                 HorizontalLayout {
-                    spacing: Theme.spacing * 2;
+                    horizontal-stretch: 1;
 
-                    VerticalLayout {
-                        alignment: LayoutAlignment.center;
+                    CellItem {
+                        text: entry.title;
+                        overflow: elide;
+                    }
+                }
 
-                        fp := FlashProgress {
-                            progress: calc-progress(entry.start-date, entry.end-date);
-                            finished-color: progress-color(entry.state);
-                            is-stop: entry.state != RecordState.Unfinish;
-                        }
+                CellItem {
+                    init => {
+                        state-width = Math.max(self.preferred-width, state-width);
                     }
 
-                    Label {
-                        vertical-alignment: center;
-                        text: fp.progress * 100 + "%";
-                        color: fp.finished-color;
+                    width: state-width;
+                    text: Logic.state-to-str(entry.state);
+                    color: Logic.state-color(entry.state);
+                }
+
+                CellItem {
+                    init => {
+                        progress-width = Math.max(self.preferred-width, progress-width);
                     }
+
+                    width: progress-width;
+                    color: Logic.state-color(entry.state);
+                    text: Math.round(Logic.record-progress(entry) * 100) + "%";
                 }
 
                 IconBtn {
@@ -184,6 +90,20 @@ export component TableBody inherits ListView {
                     show-icon-hover-background: false;
 
                     clicked => {
+                        PopupActionSetting.show(self.absolute-position.x + self.mouse-x + Theme.padding, self.absolute-position.y + self.mouse-y + Theme.padding, [
+                            {
+                                icon: Icons.recover,
+                                text: "Recover",
+                                action: "recover-archive",
+                                user-data: index,
+                            },
+                            {
+                                icon: Icons.delete-fill,
+                                text: "Remove",
+                                action: "remove-archive",
+                                user-data: index,
+                            },
+                        ]);
                     }
                 }
             }
@@ -191,64 +111,20 @@ export component TableBody inherits ListView {
     }
 }
 
-export component Archive inherits VerticalLayout {
-    private property <length> title-start-date-width;
-    private property <length> title-end-date-width;
+export component Archive inherits Rectangle {
+    border-width: Store.archive-entries.length > 0 ? Theme.default-border-width : 0;
+    border-color: Theme.primary-text-color;
 
-    Rectangle {
-        border-width: Theme.default-border-width;
-        border-color: Theme.primary-text-color;
-
-        GainFocus { }
-
-        VerticalLayout {
-            padding: parent.border-width;
-
-            TableHeader {
-                title-start-date-width: title-start-date-width;
-                title-end-date-width: title-end-date-width;
-            }
-
-            TableBody {
-                changed title-start-date-width => {
-                    root.title-end-date-width = self.title-end-date-width;
-                }
-
-                changed title-end-date-width => {
-                    root.title-start-date-width = self.title-start-date-width;
-                }
-            }
+    if Store.archive-entries.length == 0: CenterLayout {
+        NoMessageImg {
+            width: root.width;
+            text: Logic.tr("No Message");
         }
     }
+
+    VerticalLayout {
+        padding: parent.border-width;
+
+        TableBody { }
+    }
 }
-
-    // date-picker := DatePickerPopup {
-    //     x: (root.width - self.width) / 2;
-    //     y: (root.height - self.height) / 2;
-    //     close-policy: PopupClosePolicy.close-on-click-outside;
-    //
-    //     accepted(date) => {
-    //         debug(date.year + "-" + date.month + "-" + date.day);
-    //         self.close();
-    //     }
-    //     canceled => {
-    //         self.close();
-    //     }
-    // }
-
-                    // if is-edit-title: LineInput {
-                    //     // width: Math.min(parent.width * 30%, self.preferred-width);
-                    //     width: 30%;
-                    //     text: entry.title;
-                    //     is-show-icon: true;
-                    //     icon: Icons.checked-box;
-                    //
-                    //     accepted => {
-                    //         is-edit-title = false;
-                    //     }
-                    //
-                    //     clicked => {
-                    //         is-edit-title = false;
-                    //     }
-                    // }
-

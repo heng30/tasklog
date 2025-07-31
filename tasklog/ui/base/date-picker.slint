@@ -107,7 +107,7 @@ export component DatePicker inherits Rectangle {
     callback canceled();
     callback confirmed(date: Date);
 
-    function set-date(date: Date) {
+    public function set-date(date: Date) {
         if (current-year != date.year || current-month != date.month) {
             date-cells = Util.upate-date-picker(date.year, date.month);
         }
@@ -321,6 +321,10 @@ export component DatePicker inherits Rectangle {
 
 export component DatePickerPopup inherits PopupWindow {
     callback confirmed(date: Date);
+
+    public function set-date(date: Date) {
+        dp.set-date(date);
+    }
 
     width: dp.width;
     height: dp.height;

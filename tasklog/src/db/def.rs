@@ -1,10 +1,38 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_with::{serde_as, DeserializeAs, SerializeAs};
 
-use crate::slint_generatedAppWindow::{RecordEntry as UIRecordEntry, RecordState as UIRecordState};
+use crate::slint_generatedAppWindow::{
+    RecordEntry as UIRecordEntry, RecordPlanEntry as UIRecordPlanEntry,
+    RecordState as UIRecordState,
+};
 use slint::{Model, ModelRc, VecModel};
 
 pub const RECORD_TABLE: &str = "record";
+pub const ARCHIVE_TABLE: &str = "archive";
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct RecordPlanEntry {
+    detail: String,
+    is_finished: bool,
+}
+
+impl From<UIRecordPlanEntry> for RecordPlanEntry {
+    fn from(entry: UIRecordPlanEntry) -> Self {
+        RecordPlanEntry {
+            detail: entry.detail.into(),
+            is_finished: entry.is_finished,
+        }
+    }
+}
+
+impl From<RecordPlanEntry> for UIRecordPlanEntry {
+    fn from(entry: RecordPlanEntry) -> Self {
+        UIRecordPlanEntry {
+            detail: entry.detail.into(),
+            is_finished: entry.is_finished,
+        }
+    }
+}
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -13,7 +41,7 @@ pub struct RecordEntry {
     pub start_date: String,
     pub end_date: String,
     pub title: String,
-    pub plan: String,
+    pub plan: Vec<RecordPlanEntry>,
     pub tags: Vec<String>,
 
     #[serde_as(as = "RecordState")]
@@ -27,8 +55,14 @@ impl From<UIRecordEntry> for RecordEntry {
             start_date: entry.start_date.into(),
             end_date: entry.end_date.into(),
             title: entry.title.into(),
-            plan: entry.plan.into(),
             state: entry.state,
+
+            plan: entry
+                .plan
+                .iter()
+                .map(|item| item.into())
+                .collect::<Vec<_>>(),
+
             tags: entry
                 .tags
                 .iter()
@@ -45,8 +79,15 @@ impl From<RecordEntry> for UIRecordEntry {
             start_date: entry.start_date.into(),
             end_date: entry.end_date.into(),
             title: entry.title.into(),
-            plan: entry.plan.into(),
             state: entry.state,
+
+            plan: ModelRc::new(VecModel::from_slice(
+                &entry
+                    .plan
+                    .into_iter()
+                    .map(|item| item.into())
+                    .collect::<Vec<UIRecordPlanEntry>>(),
+            )),
 
             tags: ModelRc::new(VecModel::from_slice(
                 &entry

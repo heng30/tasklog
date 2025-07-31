@@ -12,6 +12,7 @@ export component RecordEditDialog inherits Dialog {
     private property <RecordEntry> clean-entry;
     private property <bool> is-set-start-date;
     private property <Date> current-date: Util.get-current-date();
+    private property <string> dp-set-date-str;
 
     function date-str(date: Date) -> string {
         return date.year + "-" + date.month + "-" + date.day;
@@ -43,6 +44,7 @@ export component RecordEditDialog inherits Dialog {
 
                     clicked => {
                         is-set-start-date = true;
+                        dp-set-date-str = self.text;
                         dp.show();
                     }
                 }
@@ -61,6 +63,7 @@ export component RecordEditDialog inherits Dialog {
 
                     clicked => {
                         is-set-start-date = false;
+                        dp-set-date-str = self.text;
                         dp.show();
                     }
                 }
@@ -171,6 +174,10 @@ export component RecordEditDialog inherits Dialog {
     dp := DatePickerPopup {
         x: (root.width - self.width) / 2;
         y: 100px;
+
+        init => {
+            self.set-date(Util.parse-date-str(dp-set-date-str));
+        }
 
         confirmed(date) => {
             if (is-set-start-date) {

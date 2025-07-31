@@ -5,10 +5,12 @@ import { Store, TabIndex } from "../../store.slint";
 
 import { Record } from "record.slint";
 import { Statistic } from "statistic.slint";
+import { Archive } from "archive.slint";
 
 export component Home inherits VerticalLayout {
     padding: Theme.padding * 2;
 
     if Store.current-tab-index == TabIndex.Home: Record { }
+    if Store.current-tab-index == TabIndex.Archive: Archive { }
     if Store.current-tab-index == TabIndex.Statistic: Statistic { }
 }

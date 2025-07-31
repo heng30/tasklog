@@ -265,6 +265,21 @@ pub fn init(ui: &AppWindow) {
         }
     });
 
+    let ui_handle = ui.as_weak();
+    ui.global::<Util>()
+        .on_parse_date_str(move |date| match cutil::time::parse_date_str(&date) {
+            Ok(date) => UIDate {
+                year: date.year,
+                month: date.month as i32,
+                day: date.day as i32,
+                main_month: date.month as i32,
+            },
+            _ => ui_handle
+                .unwrap()
+                .global::<Util>()
+                .invoke_get_current_date(),
+        });
+
     ui.global::<Util>()
         .on_upate_date_picker(|year: i32, month: i32| {
             match cutil::time::get_calendar_matrix(year, month as u32) {
