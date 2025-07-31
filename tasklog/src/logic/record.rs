@@ -135,14 +135,73 @@ pub fn init(ui: &AppWindow) {
         record_init(&ui);
     });
 
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>()
+        .on_update_record_state(move |index, state| {
+            let ui = ui_handle.unwrap();
+            let index = index as usize;
+            let mut entry = store_current_record_entries!(ui).row_data(index).unwrap();
+            let old_state = entry.state;
+
+            log::debug!("{old_state:?} -> {state:?}");
+
+            match state {
+                UIRecordState::Running => {
+                    entry.state = UIRecordState::Running;
+
+                    match old_state {
+                        UIRecordState::NotStarted => {
+                            entry.start_date = cutil::time::local_now("%Y-%m-%d").into();
+                        }
+                        UIRecordState::Finished
+                        | UIRecordState::Timeout
+                        | UIRecordState::Giveup => {
+                            entry.end_date = cutil::time::local_now("%Y-%m-%d").into();
+                        }
+                        _ => (),
+                    }
+                }
+                UIRecordState::Finished => {
+                    entry.state = UIRecordState::Finished;
+                    entry.end_date = cutil::time::local_now("%Y-%m-%d").into();
+
+                    if old_state == UIRecordState::NotStarted {
+                        entry.start_date = entry.end_date.clone();
+                    }
+                }
+                UIRecordState::Giveup => {
+                    entry.state = UIRecordState::Giveup;
+                    entry.end_date = cutil::time::local_now("%Y-%m-%d").into();
+
+                    if old_state == UIRecordState::NotStarted {
+                        entry.start_date = entry.end_date.clone();
+                    }
+                }
+                _ => return,
+            }
+
+            if let Ok(diff_days) =
+                cutil::time::diff_dates_to_days(&entry.start_date, &entry.end_date)
+                && diff_days < 0
+            {
+                entry.end_date = entry.start_date.clone();
+            }
+
+            store_current_record_entries!(ui).set_row_data(index, entry.clone());
+            update_db_entry(&ui, entry.into());
+        });
+
     ui.global::<Logic>().on_remain_days(|start_date, end_date| {
-        cutil::time::diff_dates_to_days(&start_date, &end_date).unwrap_or_default() as i32
+        cutil::time::diff_dates_to_days(&start_date, &end_date)
+            .unwrap_or_default()
+            .max(0) as i32
     });
 
     ui.global::<Logic>()
         .on_remain_days_numbers(|start_date, end_date| {
-            let days =
-                cutil::time::diff_dates_to_days(&start_date, &end_date).unwrap_or_default() as i32;
+            let days = cutil::time::diff_dates_to_days(&start_date, &end_date)
+                .unwrap_or_default()
+                .max(0) as i32;
 
             let days_numbers = if days < 10 {
                 vec![0, days]

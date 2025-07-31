@@ -1,10 +1,27 @@
 import { ListView } from "std-widgets.slint";
-import { RecordState, RecordEntry, PopupIndex } from "../../store.slint";
+import { Date} from "../../base/def.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { Search, LineInput, Label, IconBtn, FlashProgress, ConfirmBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress, PopupActionSetting, PasswordSetting } from "../../base/widgets.slint";
+import { RecordState, RecordEntry, PopupIndex } from "../../store.slint";
+import { Search, Label, IconBtn, TextBtnWithoutIcon, GainFocus, HorizontalLedNumber, Divider, Tag, CircleProgress, PopupActionSetting } from "../../base/widgets.slint";
 
 component StatePopup inherits PopupWindow {
-    private property <[string]> values: [Logic.tr("Giveup"), Logic.tr("Finished"), Logic.tr("Running")];
+    in-out property <RecordState> current-state;
+
+    function state-values(state: RecordState) -> [string] {
+        if (state == RecordState.NotStarted) {
+            return [Logic.tr("Giveup"), Logic.tr("Running"), Logic.tr("Finished")];
+        } else if (state == RecordState.Running) {
+            return [Logic.tr("Giveup"), Logic.tr("Finished")];
+        } else if (state == RecordState.Finished) {
+            return [Logic.tr("Running"), Logic.tr("Giveup")];
+        } else if (state == RecordState.Giveup) {
+            return [Logic.tr("Running"), Logic.tr("Finished")];
+        } else if (state == RecordState.Timeout) {
+            return [Logic.tr("Giveup"), Logic.tr("Finished")];
+        } else {
+            return [];
+        }
+    }
 
     callback update-record-state(state: string);
 
@@ -17,7 +34,7 @@ component StatePopup inherits PopupWindow {
             spacing: Theme.spacing * 2;
             padding: Theme.padding * 2;
 
-            for value[index] in values: Rectangle {
+            for value[index] in state-values(current-state): Rectangle {
                 background: state-pop-ta.has-hover ? Theme.hover-background : Theme.base-background;
                 border-radius: Theme.border-radius;
 
@@ -236,28 +253,28 @@ component TaskCard inherits Rectangle {
         num-hbox := Rectangle {
             width: Theme.icon-size * 12;
 
+            private property <Date> current-date: Util.get-current-date();
+
             Label {
                 x: Math.max(0, led-number.x - self.preferred-width);
                 y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
-                text: Logic.tr("remain");
+                text: entry.state == RecordState.NotStarted ? Logic.tr("start in") : (entry.state == RecordState.Running ? Logic.tr("remain") : Logic.tr("spent"));
                 color: Theme.placeholder-text-color;
             }
 
             led-number := HorizontalLedNumber {
-                private property <[int]> not-start-numbners: [0, 0];
-
                 number-spacing: Theme.spacing * 2;
                 number-padding: Theme.padding * 4;
                 number-size: Theme.icon-size * 2;
                 colorize: state-color(entry.state);
-                numbers: entry.state == RecordState.NotStarted ? not-start-numbners : Logic.remain-days-numbers(entry.start-date, entry.end-date);
+                numbers: entry.state == RecordState.NotStarted ? Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date) : Logic.remain-days-numbers(entry.start-date, entry.end-date);
             }
 
             Label {
                 x: Math.min(led-number.x + led-number.preferred-width - Theme.padding * 2, root.width - self.preferred-width);
                 y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
-                text: Logic.remain-days(entry.start-date,entry.end-date) > 1 ? Logic.tr("days") : Logic.tr("day");
                 color: Theme.placeholder-text-color;
+                text: (entry.state == RecordState.NotStarted && Logic.remain-days(Util.date-str(current-date), entry.start-date) > 1) || (entry.state != RecordState.NotStarted && Logic.remain-days(entry.start-date, entry.end-date) > 1) ? Logic.tr("days") : Logic.tr("day");
             }
         }
 
@@ -320,9 +337,10 @@ component TaskCard inherits Rectangle {
     state-popup := StatePopup {
         x: state-btn.absolute-position.x - root.absolute-position.x + state-btn.width / 2 - self.width / 2;
         y: state-btn.absolute-position.y - root.absolute-position.y - self.height - Theme.padding * 2;
+        current-state: entry.state;
 
         update-record-state(value) => {
-            Logic.update-record-state(str-to-state(value));
+            Logic.update-record-state(current-index, str-to-state(value));
         }
     }
 }

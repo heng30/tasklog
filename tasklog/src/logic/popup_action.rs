@@ -1,4 +1,5 @@
-use crate::slint_generatedAppWindow::{AppWindow, Logic, PopupActionSetting};
+use super::tr::tr;
+use crate::slint_generatedAppWindow::{AppWindow, ConfirmDialogSetting, Logic, PopupActionSetting};
 use slint::ComponentHandle;
 
 pub fn init(ui: &AppWindow) {
@@ -19,8 +20,13 @@ pub fn init(ui: &AppWindow) {
                         .invoke_open_record_dialog(current_index);
                 }
                 "remove-record" => {
-                    let current_index = user_data.parse::<i32>().unwrap();
-                    ui.global::<Logic>().invoke_delete_record(current_index);
+                    ui.global::<ConfirmDialogSetting>().invoke_set(
+                        true,
+                        tr("Warning").into(),
+                        tr("Delete or not?").into(),
+                        "remove-record".into(),
+                        user_data,
+                    );
                 }
                 "archive-record" => {
                     let current_index = user_data.parse::<i32>().unwrap();

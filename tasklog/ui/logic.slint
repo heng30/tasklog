@@ -57,7 +57,7 @@ export global Logic {
     callback update-record(entry: RecordEntry);
     callback delete-record(index: int);
     callback search-record(keyword: string);
-    callback update-record-state(state: RecordState);
+    callback update-record-state(index: int, state: RecordState);
     callback open-record-dialog(index: int);
 
     pure callback remain-days(start_day: string, end_day: string) -> int;

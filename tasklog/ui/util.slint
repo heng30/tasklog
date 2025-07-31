@@ -125,4 +125,8 @@ export global Util {
             return MediaControlStatus.Once;
         }
     }
+
+    pure public function date-str(date: Date) -> string {
+        return date.year + "-" + date.month + "-" + date.day;
+    }
 }
