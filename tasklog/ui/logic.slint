@@ -66,8 +66,15 @@ export global Logic {
     callback remove-archive(index: int);
 
     callback add-record-plan();
-    callback remove-records-plan(index: int);
+    callback remove-record-plan(index: int);
+    callback ai-generate-record-plan();
     callback open-record-plan-dialog(index: int);
+
+    pure callback current-record-plan-step(entries: [RecordPlanEntry]) -> int;
+    pure callback calc-record-plan-steps(counts: int) -> [string];
+    calc-record-plan-steps() => {
+        ["1", "2", "3"];
+    }
 
     pure callback record-progress(entry: RecordEntry) -> float;
     record-progress(entry) => {

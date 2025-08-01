@@ -1,8 +1,6 @@
 import { RecordPlanEntry } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { TxtEdit, Label, IconBtn, GainFocus, ProcessStep, SwitchBtn, Dialog } from "../../base/widgets.slint";
-
-// import { ToastStatus} from "../../base/def.slint";
+import {ConfirmDialogSetting, TxtEdit, Label, IconBtn, GainFocus, ProcessStep, SwitchBtn, Dialog } from "../../base/widgets.slint";
 
 component HeadBar inherits HorizontalLayout {
     in-out property <int> seleted-index;
@@ -13,11 +11,12 @@ component HeadBar inherits HorizontalLayout {
         alignment: center;
 
         ProcessStep {
-            steps: ["", "", "", ""];
+            steps: Logic.calc-record-plan-steps(Store.record-plan-entry.plan.length);
+            is-hide-text: true;
             text-font-size: Theme.default-font-size;
             number-font-size: Theme.default-font-size;
             process-line-width: (parent.width - self.number-font-size * 2 * self.steps.length) / self.steps.length;
-            current-step: Util.progress-value-int(self.steps.length, self.steps.length * 1s);
+            current-step: Logic.current-record-plan-step(Store.record-plan-entry.plan);
         }
     }
 
@@ -38,6 +37,15 @@ component HeadBar inherits HorizontalLayout {
                 padding-right: Theme.padding * 4;
 
                 IconBtn {
+                    icon: Icons.ai-robot;
+                    hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                    clicked => {
+                        ConfirmDialogSetting.set(true, Logic.tr("Info"), Logic.tr("Use ai to generate plan or not"), "ai-generate-record-plan", "");
+                    }
+                }
+
+                IconBtn {
                     icon: Icons.delete;
                     hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
@@ -45,7 +53,7 @@ component HeadBar inherits HorizontalLayout {
                         if (seleted-index < 0 || seleted-index >= Store.record-plan-entry.plan.length) {
                             return;
                         }
-                        Logic.remove-records-plan(seleted-index);
+                        ConfirmDialogSetting.set(true, Logic.tr("Warn"), Logic.tr("Remove or not"), "remove-record-plan", seleted-index);
                     }
                 }
 

@@ -23,6 +23,14 @@ pub fn init(ui: &AppWindow) {
                     let current_index = user_data.parse::<i32>().unwrap();
                     ui.global::<Logic>().invoke_remove_archive(current_index);
                 }
+                "ai-generate-record-plan" => {
+                    ui.global::<Logic>().invoke_ai_generate_record_plan();
+                }
+                "remove-record-plan" => {
+                    let current_index = user_data.parse::<i32>().unwrap();
+                    ui.global::<Logic>()
+                        .invoke_remove_record_plan(current_index);
+                }
                 _ => (),
             }
         });

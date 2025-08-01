@@ -285,6 +285,28 @@ pub fn init(ui: &AppWindow) {
 
             ModelRc::new(VecModel::from_slice(&days_numbers))
         });
+
+    ui.global::<Logic>().on_calc_record_plan_steps(|counts| {
+        ModelRc::new(VecModel::from_slice(
+            (0..counts)
+                .map(|index| slint::format!("{}", index + 1))
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ))
+    });
+
+    ui.global::<Logic>().on_current_record_plan_step(|entries| {
+        let mut index = 0;
+        for entry in entries.iter() {
+            if !entry.is_finished {
+                return index;
+            }
+
+            index += 1;
+        }
+
+        index
+    });
 }
 
 fn record_init(ui: &AppWindow) {

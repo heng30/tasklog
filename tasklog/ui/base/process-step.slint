@@ -12,6 +12,7 @@ export component ProcessStep inherits Rectangle {
     in-out property <[string]> steps;
     in-out property <int> current-step;
     in-out property <Orientation> orientation;
+    in-out property <bool> is-hide-text;
 
     in-out property <length> number-font-size: Theme.title3-font-size;
     in-out property <length> text-font-size: Theme.title5-font-size;
@@ -76,7 +77,7 @@ export component ProcessStep inherits Rectangle {
                 }
             }
 
-            if item != "": Label {
+            if item != "" && !is-hide-text: Label {
                 text: item;
                 font-size: root.text-font-size;
                 color: root.text-color;
@@ -128,7 +129,7 @@ export component ProcessStep inherits Rectangle {
                 }
             }
 
-            if item != "": Rectangle {
+            if item != "" && !is-hide-text: Rectangle {
                 height: step-circle.height;
 
                 Label {
