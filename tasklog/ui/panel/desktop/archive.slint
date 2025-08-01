@@ -113,7 +113,7 @@ export component TableBody inherits ListView {
 
 export component Archive inherits Rectangle {
     border-width: Store.archive-entries.length > 0 ? Theme.default-border-width : 0;
-    border-color: Theme.primary-text-color;
+    border-color: Theme.base-border-color;
 
     if Store.archive-entries.length == 0: CenterLayout {
         NoMessageImg {

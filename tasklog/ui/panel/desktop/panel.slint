@@ -3,6 +3,7 @@ import { SettingDialog, HelpDialog, DonateDialog, AboutDialog, HorizontalSetting
 import { Blanket, StatusBar, Divider, IconBtn, ComponentPosition, AboutSetting, ToolTip, ToolTipSetting, PopupAction, PopupActionSetting } from "../../base/widgets.slint";
 import { Home } from "home.slint";
 import { RecordEditDialog } from "record-edit-dialog.slint";
+import { RecordPlanDialog } from "record-plan-dialog.slint";
 
 component HorizontalHomeIconsBar inherits Rectangle {
     width: hbox.preferred-width;
@@ -120,7 +121,7 @@ component VerticalStatusBar inherits Rectangle {
         VerticalLayout {
             spacing: Theme.spacing * 5;
             padding: Theme.padding * 2;
-            padding-top: Theme.padding * 5;
+            padding-top: Theme.padding * 3;
 
             IconBtn {
                 icon: Icons.record-fill;
@@ -180,6 +181,7 @@ export component DesktopPanel inherits Rectangle {
     private property <bool> is-show-help-dialog: Store.current-popup-index == PopupIndex.Help;
     private property <bool> is-show-donate-dialog: Store.current-popup-index == PopupIndex.Donate;
     private property <bool> is-show-record-edit-dialog: Store.current-popup-index == PopupIndex.RecordEdit;
+    private property <bool> is-show-record-plan-dialog: Store.current-popup-index == PopupIndex.RecordPlan;
 
     private property <length> home-height: self.height;
 
@@ -202,13 +204,17 @@ export component DesktopPanel inherits Rectangle {
         }
     }
 
-    if is-show-setting-dialog || is-show-about-dialog || is-show-help-dialog || is-show-donate-dialog || is-show-record-edit-dialog:  Blanket {
+    if is-show-setting-dialog || is-show-about-dialog || is-show-help-dialog || is-show-donate-dialog || is-show-record-edit-dialog || is-show-record-plan-dialog:  Blanket {
         clicked => {
             Logic.switch-popup(PopupIndex.None);
         }
     }
 
     if is-show-record-edit-dialog: RecordEditDialog {
+        width: Math.min(1300px, root.width * 0.8);
+    }
+
+    if is-show-record-plan-dialog: RecordPlanDialog {
         width: Math.min(1300px, root.width * 0.8);
     }
 

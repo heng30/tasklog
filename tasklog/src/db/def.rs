@@ -30,6 +30,7 @@ impl From<RecordPlanEntry> for UIRecordPlanEntry {
         UIRecordPlanEntry {
             detail: entry.detail.into(),
             is_finished: entry.is_finished,
+            ..Default::default()
         }
     }
 }

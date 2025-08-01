@@ -1,0 +1,175 @@
+import { RecordPlanEntry } from "../../store.slint";
+import { Theme, Icons, Store, Util, Logic } from "../def.slint";
+import { TxtEdit, Label, IconBtn, GainFocus, ProcessStep, SwitchBtn, Dialog } from "../../base/widgets.slint";
+
+// import { ToastStatus} from "../../base/def.slint";
+
+component HeadBar inherits HorizontalLayout {
+    in-out property <int> seleted-index;
+
+    spacing: Theme.spacing * 4;
+
+    VerticalLayout {
+        alignment: center;
+
+        ProcessStep {
+            steps: ["", "", "", ""];
+            text-font-size: Theme.default-font-size;
+            number-font-size: Theme.default-font-size;
+            process-line-width: (parent.width - self.number-font-size * 2 * self.steps.length) / self.steps.length;
+            current-step: Util.progress-value-int(self.steps.length, self.steps.length * 1s);
+        }
+    }
+
+    HorizontalLayout {
+        alignment: end;
+
+        Rectangle {
+            height: hbox.preferred-height;
+            border-radius: self.height / 2;
+            background: Theme.secondary-background;
+            border-width: Theme.default-border-width;
+            border-color: Theme.base-border-color;
+
+            hbox := HorizontalLayout {
+                spacing: Theme.spacing * 4;
+                padding: Theme.padding * 2;
+                padding-left: Theme.padding * 4;
+                padding-right: Theme.padding * 4;
+
+                IconBtn {
+                    icon: Icons.delete;
+                    hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                    clicked => {
+                        if (seleted-index < 0 || seleted-index >= Store.record-plan-entry.plan.length) {
+                            return;
+                        }
+                        Logic.remove-records-plan(seleted-index);
+                    }
+                }
+
+                IconBtn {
+                    icon: Icons.add-light;
+                    hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                    clicked => {
+                        Logic.add-record-plan();
+                    }
+                }
+            }
+        }
+    }
+}
+
+component BodyItem inherits Rectangle {
+    in-out property <int> index;
+    in-out property <RecordPlanEntry> entry;
+    in-out property <bool> is-selected;
+
+    callback head-clicked <=> ta.clicked;
+
+    border-radius: Theme.border-radius;
+    border-color: ta.has-hover || is-selected ? Theme.thirdly-brand-color : Theme.base-border-color;
+    border-width: Theme.default-border-width;
+    background: Theme.table-item-dark-color;
+    height: vbox.preferred-height;
+
+    ta := GainFocus { }
+
+    vbox := VerticalLayout {
+        Rectangle {
+            HorizontalLayout {
+                alignment: space-between;
+                padding: Theme.padding * 2;
+
+                Label {
+                    font-weight: Theme.bold-font-weight;
+                    text: Logic.tr("Step") + " " + index;
+                    color: entry.is-finished ? Theme.success-color : Theme.primary-text-color;
+                }
+
+                HorizontalLayout {
+                    spacing: Theme.padding * 4;
+
+                    SwitchBtn {
+                        checked: entry.is-finished;
+                        indicator-size: Theme.icon-size * Theme.golden-ratio;
+
+                        toggled => {
+                            entry.is-finished = !entry.is-finished;
+                        }
+                    }
+
+                    IconBtn {
+                        icon: Icons.move;
+                        mouse-cursor: self.has-hover ? MouseCursor.move : MouseCursor.default;
+                        hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                        clicked => {
+                            Logic.add-record-plan();
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding: Theme.padding;
+
+            Rectangle {
+                height: te.font-size * 4;
+                background: Theme.base-background;
+
+                te := TxtEdit {
+                    text: entry.detail;
+                    border-color: Theme.base-border-color;
+                }
+            }
+        }
+    }
+}
+
+component Body inherits Flickable {
+    in-out property <int> seleted-index: -1;
+
+    Rectangle {
+        GainFocus { }
+
+        VerticalLayout {
+            alignment: start;
+            spacing: Theme.spacing * 2;
+
+            for entry[index] in Store.record-plan-entry.plan: BodyItem {
+                index: index;
+                entry: entry;
+                is-selected: index == seleted-index;
+
+                head-clicked => {
+                    seleted-index = index;
+                }
+            }
+        }
+    }
+}
+
+export component RecordPlanDialog inherits Dialog {
+    title: Logic.tr("Edit Plan");
+    is-prevent-event-forward: true;
+    is-hide-bottom-btns: true;
+
+    in-out property <length> inner-height: 650px;
+
+    VerticalLayout {
+        padding: Theme.padding * 2;
+        padding-top: Theme.padding * 4;
+        spacing: Theme.spacing * 4;
+        height: root.inner-height;
+
+        HeadBar {
+            seleted-index: body.seleted-index;
+        }
+
+        body := Body { }
+    }
+}

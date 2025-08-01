@@ -57,6 +57,9 @@ export enum RecordState {
 export struct RecordPlanEntry{
     detail: string,
     is-finished: bool,
+
+    is-moving: bool,
+    pos-y: length,
 }
 
 export struct RecordEntry{
@@ -78,7 +81,7 @@ export global Store {
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
     in-out property <TabIndex> current-tab-index: TabIndex.Home;
-    in-out property <PopupIndex> current-popup-index: PopupIndex.None;
+    in-out property <PopupIndex> current-popup-index: PopupIndex.RecordPlan;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";
@@ -95,51 +98,52 @@ export global Store {
 
     //////////////////////////////// Logic Start ////////////////////////////////
     in-out property <RecordEntry> edit-record-entry;
+    in-out property <RecordEntry> record-plan-entry: record-entries[0];
     in-out property <[RecordEntry]> record-entries-cache: [];
     in-out property <[RecordEntry]> record-entries: [
-        // {
-        //     uuid: "uuid-1",
-        //     start-date: "2025-01-02",
-        //     end-date: "2025-03-02",
-        //     title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
-        //     plan: [
-        //         { detail : "A simple plane", is-finished: true },
-        //         { detail : "A simple plane2", is-finished: false },
-        //     ],
-        //     state: RecordState.Running,
-        //     tags: ["Study", "Project", "人物"],
-        // },
-        // {
-        //     uuid: "uuid-1",
-        //     start-date: "2025-01-02",
-        //     end-date: "2025-03-02",
-        //     title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
-        //     state: RecordState.NotStarted,
-        //     tags: ["Study", "Project", "人物"],
-        // },
-        // {
-        //     uuid: "uuid-2",
-        //     start-date: "2025-01-02",
-        //     end-date: "2025-03-02",
-        //     title: "Study Deep Learning. goode",
-        //     state: RecordState.Finished,
-        //     tags: ["Project", "人物"],
-        // },
-        // {
-        //     uuid: "uuid-3",
-        //     start-date: "2025-01-02",
-        //     end-date: "2025-03-02",
-        //     title: "中文成为是及时好喝吗节混合论文",
-        //     state: RecordState.Giveup,
-        //     tags: ["人物"],
-        // },
-        // {
-        //     uuid: "uuid-4",
-        //     start-date: "2025-01-02",
-        //     end-date: "2025-03-02",
-        //     title: "Study Deep Learning",
-        //     state: RecordState.Timeout,
-        // }
+        {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
+            plan: [
+                { detail : "A simple plane", is-finished: true },
+                { detail : "A simple plane2", is-finished: false },
+            ],
+            state: RecordState.Running,
+            tags: ["Study", "Project", "人物"],
+        },
+        {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
+            state: RecordState.NotStarted,
+            tags: ["Study", "Project", "人物"],
+        },
+        {
+            uuid: "uuid-2",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. goode",
+            state: RecordState.Finished,
+            tags: ["Project", "人物"],
+        },
+        {
+            uuid: "uuid-3",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "中文成为是及时好喝吗节混合论文",
+            state: RecordState.Giveup,
+            tags: ["人物"],
+        },
+        {
+            uuid: "uuid-4",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning",
+            state: RecordState.Timeout,
+        }
     ];
 
     in-out property <[RecordEntry]> archive-entries: [
@@ -151,6 +155,9 @@ export global Store {
             plan: [
                 { detail : "A simple plane", is-finished: true },
                 { detail : "A simple plane2", is-finished: false },
+                { detail : "A simple plane3", is-finished: false },
+                { detail : "A simple plane4", is-finished: false },
+                { detail : "A simple plane5", is-finished: false },
             ],
             state: RecordState.Running,
             tags: ["Study", "Project", "人物"],

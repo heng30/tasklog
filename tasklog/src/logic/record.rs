@@ -116,6 +116,21 @@ pub fn init(ui: &AppWindow) {
     });
 
     let ui_handle = ui.as_weak();
+    ui.global::<Logic>()
+        .on_open_record_plan_dialog(move |index| {
+            let ui = ui_handle.unwrap();
+
+            let entry = store_current_record_entries!(ui)
+                .row_data(index as usize)
+                .unwrap();
+
+            ui.global::<Store>().set_record_plan_entry(entry);
+
+            ui.global::<Logic>()
+                .invoke_switch_popup(PopupIndex::RecordPlan);
+        });
+
+    let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_search_record(move |keyword| {
         let ui = ui_handle.unwrap();
 

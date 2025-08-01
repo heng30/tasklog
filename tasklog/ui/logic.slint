@@ -1,4 +1,4 @@
-import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry } from "store.slint";
+import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry, RecordPlanEntry } from "store.slint";
 
 import { Theme } from "theme.slint";
 
@@ -64,6 +64,10 @@ export global Logic {
     callback add-archive(entry: RecordEntry);
     callback recover-archive(index: int);
     callback remove-archive(index: int);
+
+    callback add-record-plan();
+    callback remove-records-plan(index: int);
+    callback open-record-plan-dialog(index: int);
 
     pure callback record-progress(entry: RecordEntry) -> float;
     record-progress(entry) => {

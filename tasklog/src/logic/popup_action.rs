@@ -33,8 +33,9 @@ pub fn init(ui: &AppWindow) {
                     ui.global::<Logic>().invoke_archive_record(current_index);
                 }
                 "plan-record" => {
-                    let _current_index = user_data.parse::<i32>().unwrap();
-                    // TODO
+                    let current_index = user_data.parse::<i32>().unwrap();
+                    ui.global::<Logic>()
+                        .invoke_open_record_plan_dialog(current_index);
                 }
                 "remove-archive" => {
                     ui.global::<ConfirmDialogSetting>().invoke_set(
