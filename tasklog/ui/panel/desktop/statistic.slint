@@ -1,45 +1,21 @@
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-
-import { DatePicker, DatePickerPopup, HorizontalLedNumber, VerticalLedNumber } from "../../base/widgets.slint";
+import { FlickableWithScrollBar, DatePicker, DatePickerPopup, Label, HorizontalLedNumber, VerticalLedNumber } from "../../base/widgets.slint";
 
 export component Statistic inherits VerticalLayout {
-    padding: Theme.padding * 8;
     spacing: Theme.spacing * 8;
 
-    HorizontalLayout {
-        width: 100%;
-        alignment: center;
+    FlickableWithScrollBar {
+        VerticalLayout {
+            spacing: Theme.spacing * 2;
+            for index in 10: Rectangle {
+                background: green;
+                height: 100px;
 
-        VerticalLedNumber {
-            number-size: Theme.icon-size;
-            numbers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+                Label {
+                    text: index;
+                    font-size: Theme.title1-font-size;
+                }
+            }
         }
     }
-
-    HorizontalLayout {
-        width: 100%;
-        alignment: center;
-        HorizontalLedNumber {
-            number-size: Theme.icon-size * 2;
-            numbers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        }
-    }
-
-    // Rectangle {
-    //     width: 100%;
-    //     height: 100%;
-    //     background: red;
-
-        // TouchArea {
-        //     clicked => {
-        //         dp.show();
-        //     }
-        // }
-        //
-        // dp := DatePickerPopup {
-        //     confirmed(date) => {
-        //         debug(date);
-        //     }
-        // }
-    // }
 }

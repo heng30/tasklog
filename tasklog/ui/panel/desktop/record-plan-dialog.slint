@@ -1,6 +1,6 @@
 import { RecordPlanEntry, PopupIndex } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import {ConfirmDialogSetting, TxtEdit, Label, IconBtn, GainFocus, ProcessStep, SwitchBtn, Dialog } from "../../base/widgets.slint";
+import { NoMessageImg, ConfirmDialogSetting, CenterLayout, TxtEdit, Label, IconBtn, GainFocus, SwitchBtn, Dialog } from "../../base/widgets.slint";
 
 component HeadBar inherits HorizontalLayout {
     in-out property <int> seleted-index;
@@ -10,14 +10,22 @@ component HeadBar inherits HorizontalLayout {
 
     VerticalLayout {
         alignment: center;
+        width: root.width - outer-hbox.preferred-width - parent.spacing;
 
-        ProcessStep {
-            steps: Logic.calc-record-plan-steps(Store.record-plan-entry.plan.length);
-            is-hide-text: true;
-            text-font-size: Theme.default-font-size;
-            number-font-size: Theme.default-font-size;
-            process-line-width: (parent.width - self.number-font-size * 3 * self.steps.length) / self.steps.length;
-            current-step: Logic.current-record-plan-step(Store.record-plan-entry.plan);
+        HorizontalLayout {
+            spacing: Theme.spacing * 4;
+
+            for entry[index] in Store.record-plan-entry.plan: Rectangle {
+                visible: self.x + self.width < parent.width;
+                width: Theme.icon-size * 1.33;
+                height: self.width;
+                border-radius: self.width / 2;
+                background: entry.is-finished ? Theme.success-color : Theme.secondary-background;
+                Label {
+                    text: index + 1;
+                    color: entry.is-finished ? Theme.base-color : Theme.regular-text-color;
+                }
+            }
         }
     }
 
@@ -199,10 +207,10 @@ component Body inherits Flickable {
             }
 
             head-clicked => {
-                if (seleted-index == -1) {
-                    seleted-index = index;
-                } else {
+                if (seleted-index == index) {
                     seleted-index = -1;
+                } else {
+                    seleted-index = index;
                 }
             }
 
@@ -253,12 +261,32 @@ export component RecordPlanDialog inherits Dialog {
             height: parent.height - vbox.preferred-height - parent.spacing - parent.padding - parent.padding-top;
             spacing: Theme.spacing * 2;
 
-            body := Body { }
+            private property <bool> is-show-scrollbar: Store.record-plan-entry.plan.length > 0 && body.viewport-height > self.height;
 
-            // ScrollBar
-            if Store.record-plan-entry.plan.length > 0 && body.viewport-height > self.height: Rectangle {
+            Rectangle {
+                if Store.record-plan-entry.plan.length == 0: CenterLayout {
+                    NoMessageImg {
+                        width: root.width;
+                        text: Logic.tr("No Message");
+                    }
+                }
+
+                body := Body {
+                    private property <float> scroll-rate;
+
+                    flicked => {
+                        if (is-show-scrollbar) {
+                            scroll-rate = -self.viewport-y / (self.viewport-height - self.height);
+                            sb.y = (parent.height - sb.height) * scroll-rate;
+                        }
+                    }
+                }
+            }
+
+            sb := Rectangle {
+                visible: is-show-scrollbar;
                 background: Theme.placeholder-text-color;
-                height: Math.max(40px, body.height - body.viewport-height + body.height);
+                height: Math.max(parent.height * 0.1, body.height - body.viewport-height + body.height);
                 width: Theme.padding * 1.5;
                 border-radius: self.width / 2;
 
