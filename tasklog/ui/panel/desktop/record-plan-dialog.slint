@@ -157,7 +157,11 @@ component Body inherits Flickable {
     }
 
     Rectangle {
-        GainFocus { }
+        GainFocus {
+            clicked => {
+                seleted-index = -1;
+            }
+        }
 
         for entry[index] in Store.record-plan-entry.plan: BodyItem {
             private property <length> offset-y;
@@ -176,7 +180,11 @@ component Body inherits Flickable {
             }
 
             head-clicked => {
-                seleted-index = index;
+                if (seleted-index == -1) {
+                    seleted-index = index;
+                } else {
+                    seleted-index = -1;
+                }
             }
 
             moved => {
@@ -184,7 +192,7 @@ component Body inherits Flickable {
                     return;
                 }
                 self.offset-y = self.pressed-y - self.mouse-y;
-                self.y = Math.clamp(self.y - self.offset-y, 0, root.height - self.height);
+                self.y = Math.clamp(self.y - self.offset-y, 0, Math.max(root.viewport-height, root.height) - self.height);
             }
 
             pointer-event(event) => {
@@ -214,8 +222,12 @@ export component RecordPlanDialog inherits Dialog {
         spacing: Theme.spacing * 4;
         height: root.inner-height;
 
-        HeadBar {
-            seleted-index: body.seleted-index;
+        VerticalLayout {
+            alignment: center;
+
+            HeadBar {
+                seleted-index: body.seleted-index;
+            }
         }
 
         body := Body { }

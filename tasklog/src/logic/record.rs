@@ -52,8 +52,11 @@ pub fn init(ui: &AppWindow) {
     ui.global::<Logic>().on_new_record(move |mut entry| {
         let ui = ui_handle.unwrap();
         entry.uuid = Uuid::new_v4().to_string().into();
-        entry.state = calc_state(&entry.start_date, &entry.end_date, entry.state)
-            .unwrap_or(UIRecordState::Running);
+
+        if let Some(state) = calc_state(&entry.start_date, &entry.end_date, entry.state) {
+            entry.state = state;
+        }
+
         store_current_record_entries!(ui).insert(0, entry.clone());
         add_db_entry(&ui, entry.into());
     });
@@ -65,8 +68,10 @@ pub fn init(ui: &AppWindow) {
             .iter()
             .position(|item| item.uuid == &entry.uuid)
         {
-            entry.state = calc_state(&entry.start_date, &entry.end_date, entry.state)
-                .unwrap_or(UIRecordState::Running);
+            if let Some(state) = calc_state(&entry.start_date, &entry.end_date, entry.state) {
+                entry.state = state;
+            }
+
             store_current_record_entries!(ui).set_row_data(index, entry.clone());
             update_db_entry(&ui, entry.into());
         }
