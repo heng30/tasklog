@@ -1,4 +1,4 @@
-import { RecordPlanEntry } from "../../store.slint";
+import { RecordPlanEntry, PopupIndex } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
 import {ConfirmDialogSetting, TxtEdit, Label, IconBtn, GainFocus, ProcessStep, SwitchBtn, Dialog } from "../../base/widgets.slint";
 
@@ -6,6 +6,7 @@ component HeadBar inherits HorizontalLayout {
     in-out property <int> seleted-index;
 
     spacing: Theme.spacing * 4;
+    height: outer-hbox.preferred-height;
 
     VerticalLayout {
         alignment: center;
@@ -15,12 +16,12 @@ component HeadBar inherits HorizontalLayout {
             is-hide-text: true;
             text-font-size: Theme.default-font-size;
             number-font-size: Theme.default-font-size;
-            process-line-width: (parent.width - self.number-font-size * 2 * self.steps.length) / self.steps.length;
+            process-line-width: (parent.width - self.number-font-size * 3 * self.steps.length) / self.steps.length;
             current-step: Logic.current-record-plan-step(Store.record-plan-entry.plan);
         }
     }
 
-    HorizontalLayout {
+    outer-hbox := HorizontalLayout {
         alignment: end;
 
         Rectangle {
@@ -75,7 +76,14 @@ component BodyItem inherits Rectangle {
     in-out property <RecordPlanEntry> entry;
     in-out property <bool> is-selected;
 
+    out property mouse-x <=> move-btn.mouse-x;
+    out property mouse-y <=> move-btn.mouse-y;
+    out property pressed-x <=> move-btn.pressed-x;
+    out property pressed-y <=> move-btn.pressed-y;
+
     callback head-clicked <=> ta.clicked;
+    callback moved <=> move-btn.moved;
+    callback pointer-event <=> move-btn.pointer-event;
 
     border-radius: Theme.border-radius;
     border-color: ta.has-hover || is-selected ? Theme.thirdly-brand-color : Theme.base-border-color;
@@ -93,7 +101,7 @@ component BodyItem inherits Rectangle {
 
                 Label {
                     font-weight: Theme.bold-font-weight;
-                    text: Logic.tr("Step") + " " + index;
+                    text: Logic.tr("Step") + " " + (index + 1);
                     color: entry.is-finished ? Theme.success-color : Theme.primary-text-color;
                 }
 
@@ -109,14 +117,10 @@ component BodyItem inherits Rectangle {
                         }
                     }
 
-                    IconBtn {
+                    move-btn := IconBtn {
                         icon: Icons.move;
+                        show-icon-hover-background: false;
                         mouse-cursor: self.has-hover ? MouseCursor.move : MouseCursor.default;
-                        hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
-
-                        clicked => {
-                            Logic.add-record-plan();
-                        }
                     }
                 }
             }
@@ -141,20 +145,56 @@ component BodyItem inherits Rectangle {
 component Body inherits Flickable {
     in-out property <int> seleted-index: -1;
 
+    private property <int> moving-index: -1;
+    private property <length> item-height;
+    private property next-item-pos-y <=> Store.next-record-plan-item-pos-y;
+
+    interactive: false;
+    viewport-height: next-item-pos-y;
+
+    init => {
+        next-item-pos-y = 0px;
+    }
+
     Rectangle {
         GainFocus { }
 
-        VerticalLayout {
-            alignment: start;
-            spacing: Theme.spacing * 2;
+        for entry[index] in Store.record-plan-entry.plan: BodyItem {
+            private property <length> offset-y;
 
-            for entry[index] in Store.record-plan-entry.plan: BodyItem {
-                index: index;
-                entry: entry;
-                is-selected: index == seleted-index;
+            height: item-height;
+            index: index;
+            entry: entry;
+            is-selected: index == seleted-index;
 
-                head-clicked => {
-                    seleted-index = index;
+            init => {
+                if (index == 0) {
+                    item-height = self.preferred-height;
+                }
+                self.y = next-item-pos-y;
+                next-item-pos-y += item-height + Theme.spacing * 2;
+            }
+
+            head-clicked => {
+                seleted-index = index;
+            }
+
+            moved => {
+                if (moving-index < 0) {
+                    return;
+                }
+                self.offset-y = self.pressed-y - self.mouse-y;
+                self.y = Math.clamp(self.y - self.offset-y, 0, root.height - self.height);
+            }
+
+            pointer-event(event) => {
+                if (event.button == PointerEventButton.left) {
+                    if (event.kind == PointerEventKind.down) {
+                        moving-index = index;
+                    } else {
+                        Logic.swap-record-plan(moving-index, self.y, item-height + Theme.spacing * 2);
+                        moving-index = -1;
+                    }
                 }
             }
         }
@@ -179,5 +219,9 @@ export component RecordPlanDialog inherits Dialog {
         }
 
         body := Body { }
+    }
+
+    cancel-clicked => {
+        Logic.switch-popup(PopupIndex.None);
     }
 }

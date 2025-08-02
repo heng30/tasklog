@@ -57,9 +57,6 @@ export enum RecordState {
 export struct RecordPlanEntry{
     detail: string,
     is-finished: bool,
-
-    is-moving: bool,
-    pos-y: length,
 }
 
 export struct RecordEntry{
@@ -97,8 +94,10 @@ export global Store {
     };
 
     //////////////////////////////// Logic Start ////////////////////////////////
-    in-out property <RecordEntry> edit-record-entry;
     in-out property <RecordEntry> record-plan-entry: record-entries[0];
+    in-out property <length> next-record-plan-item-pos-y: 0px;
+
+    in-out property <RecordEntry> edit-record-entry;
     in-out property <[RecordEntry]> record-entries-cache: [];
     in-out property <[RecordEntry]> record-entries: [
         {
@@ -109,6 +108,11 @@ export global Store {
             plan: [
                 { detail : "A simple plane", is-finished: true },
                 { detail : "A simple plane2", is-finished: false },
+                { detail : "A simple plane3", is-finished: false },
+                { detail : "A simple plane4", is-finished: false },
+                { detail : "A simple plane5", is-finished: false },
+                { detail : "A simple plane6", is-finished: false },
+                { detail : "A simple plane7", is-finished: false },
             ],
             state: RecordState.Running,
             tags: ["Study", "Project", "人物"],

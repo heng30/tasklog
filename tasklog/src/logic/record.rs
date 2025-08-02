@@ -116,21 +116,6 @@ pub fn init(ui: &AppWindow) {
     });
 
     let ui_handle = ui.as_weak();
-    ui.global::<Logic>()
-        .on_open_record_plan_dialog(move |index| {
-            let ui = ui_handle.unwrap();
-
-            let entry = store_current_record_entries!(ui)
-                .row_data(index as usize)
-                .unwrap();
-
-            ui.global::<Store>().set_record_plan_entry(entry);
-
-            ui.global::<Logic>()
-                .invoke_switch_popup(PopupIndex::RecordPlan);
-        });
-
-    let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_search_record(move |keyword| {
         let ui = ui_handle.unwrap();
 
@@ -284,6 +269,72 @@ pub fn init(ui: &AppWindow) {
             };
 
             ModelRc::new(VecModel::from_slice(&days_numbers))
+        });
+
+    // ============================== record plan ========================== //
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>()
+        .on_open_record_plan_dialog(move |index| {
+            let ui = ui_handle.unwrap();
+
+            let entry = store_current_record_entries!(ui)
+                .row_data(index as usize)
+                .unwrap();
+
+            ui.global::<Store>().set_record_plan_entry(entry);
+
+            ui.global::<Logic>()
+                .invoke_switch_popup(PopupIndex::RecordPlan);
+        });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_add_record_plan(move || {
+        let ui = ui_handle.unwrap();
+        let record_entry = ui.global::<Store>().get_record_plan_entry();
+        store_current_record_plan!(record_entry.plan).push(UIRecordPlanEntry::default());
+        ui.global::<Logic>().invoke_update_record(record_entry);
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_remove_record_plan(move |index| {
+        let ui = ui_handle.unwrap();
+        let record_entry = ui.global::<Store>().get_record_plan_entry();
+        let plan_entries = store_current_record_plan!(record_entry.plan);
+
+        let mut plan_entries_duplicate = plan_entries
+            .iter()
+            .map(|item| item.clone())
+            .collect::<Vec<_>>();
+
+        plan_entries_duplicate.remove(index as usize);
+        plan_entries.set_vec(&*plan_entries_duplicate);
+        ui.global::<Store>().set_next_record_plan_item_pos_y(0.0);
+        ui.global::<Logic>().invoke_update_record(record_entry);
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>()
+        .on_swap_record_plan(move |start_index, y, item_height| {
+            let ui = ui_handle.unwrap();
+            let start_index = start_index as usize;
+
+            let record_entry = ui.global::<Store>().get_record_plan_entry();
+            let plan_entries = store_current_record_plan!(record_entry.plan);
+            let row_count = plan_entries.row_count();
+            let end_index = (y / item_height).clamp(0.0, (row_count - 1) as f32) as usize;
+
+            log::debug!("{start_index} => {end_index}");
+
+            let mut plan_entries_duplicate = plan_entries
+                .iter()
+                .map(|item| item.clone())
+                .collect::<Vec<_>>();
+
+            plan_entries_duplicate.swap(start_index, end_index);
+            plan_entries.set_vec(&*plan_entries_duplicate);
+            ui.global::<Store>().set_next_record_plan_item_pos_y(0.0);
+            ui.global::<Logic>().invoke_update_record(record_entry);
         });
 
     ui.global::<Logic>().on_calc_record_plan_steps(|counts| {

@@ -20,6 +20,8 @@ export component IconBtn inherits Rectangle {
     out property has-hover <=> touch.has-hover;
     out property mouse-x <=> touch.mouse-x;
     out property mouse-y <=> touch.mouse-y;
+    out property pressed-x <=> touch.pressed-x;
+    out property pressed-y <=> touch.pressed-y;
 
     in-out property <bool> show-icon-hover-background: true;
     in-out property <bool> is-ltr: true;
@@ -49,6 +51,9 @@ export component IconBtn inherits Rectangle {
     callback clicked();
     callback entered();
     callback leave();
+
+    callback moved <=> touch.moved;
+    callback pointer-event <=> touch.pointer-event;
 
     border-radius: Theme.border-radius;
     background: touch.pressed ? bg-pressed-color : (touch.has-hover ? bg-color.darker(10%) : bg-color);

@@ -61,21 +61,6 @@ export global Logic {
     callback update-record-state(index: int, state: RecordState);
     callback open-record-dialog(index: int);
 
-    callback add-archive(entry: RecordEntry);
-    callback recover-archive(index: int);
-    callback remove-archive(index: int);
-
-    callback add-record-plan();
-    callback remove-record-plan(index: int);
-    callback ai-generate-record-plan();
-    callback open-record-plan-dialog(index: int);
-
-    pure callback current-record-plan-step(entries: [RecordPlanEntry]) -> int;
-    pure callback calc-record-plan-steps(counts: int) -> [string];
-    calc-record-plan-steps() => {
-        ["1", "2", "3"];
-    }
-
     pure callback record-progress(entry: RecordEntry) -> float;
     record-progress(entry) => {
         return 0.5;
@@ -85,6 +70,22 @@ export global Logic {
     pure callback remain-days-numbers(start_day: string, end_day: string) -> [int];
     remain-days-numbers(start-date, end-date) => {
         return [4, 5, 8];
+    }
+
+    callback add-archive(entry: RecordEntry);
+    callback recover-archive(index: int);
+    callback remove-archive(index: int);
+
+    callback add-record-plan();
+    callback remove-record-plan(index: int);
+    callback ai-generate-record-plan();
+    callback open-record-plan-dialog(index: int);
+    callback swap-record-plan(start-index: int, y: length, item-height: length);
+
+    pure callback current-record-plan-step(entries: [RecordPlanEntry]) -> int;
+    pure callback calc-record-plan-steps(counts: int) -> [string];
+    calc-record-plan-steps() => {
+        ["1", "2", "3", "4", "5"];
     }
 
     pure public function state-color(state: RecordState) -> color {
