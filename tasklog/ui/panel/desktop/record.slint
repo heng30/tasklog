@@ -223,6 +223,13 @@ component TaskCard inherits Rectangle {
                 number-size: Theme.icon-size * 2;
                 colorize: Logic.state-color(entry.state);
                 numbers: entry.state == RecordState.NotStarted ? Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date) : Logic.remain-days-numbers(entry.start-date, entry.end-date);
+
+                TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    clicked => {
+                        Logic.open-record-dialog(current-index);
+                    }
+                }
             }
 
             Label {
