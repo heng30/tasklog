@@ -16,7 +16,7 @@ export component TableBody inherits ListView {
         private property <bool> is-hover;
 
         Rectangle {
-            background: ta.has-hover ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-light-color : Theme.table-item-dark-color);
+            background: ta.has-hover ? Theme.checked-background : (Math.mod(index, 2) == 0 ? Theme.table-item-first : Theme.table-item-second);
 
             ta := TouchArea { }
 
