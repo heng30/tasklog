@@ -47,6 +47,15 @@ component HeadBar inherits HorizontalLayout {
                 }
 
                 IconBtn {
+                    icon: Icons.delete-all-light;
+                    hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
+
+                    clicked => {
+                        ConfirmDialogSetting.set(true, Logic.tr("Warn"), Logic.tr("Remove all entries or not"), "remove-all-record-plans", "");
+                    }
+                }
+
+                IconBtn {
                     icon: Icons.delete;
                     hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
@@ -54,7 +63,7 @@ component HeadBar inherits HorizontalLayout {
                         if (seleted-index < 0 || seleted-index >= Store.record-plan-entry.plan.length) {
                             return;
                         }
-                        ConfirmDialogSetting.set(true, Logic.tr("Warn"), Logic.tr("Remove or not"), "remove-record-plan", seleted-index);
+                        ConfirmDialogSetting.set(true, Logic.tr("Warn"), Logic.tr("Remove entry or not"), "remove-record-plan", seleted-index);
                     }
                 }
 
@@ -73,8 +82,8 @@ component HeadBar inherits HorizontalLayout {
 
 component BodyItem inherits Rectangle {
     in-out property <int> index;
-    in-out property <RecordPlanEntry> entry;
     in-out property <bool> is-selected;
+    in-out property <RecordPlanEntry> entry;
 
     out property mouse-x <=> move-btn.mouse-x;
     out property mouse-y <=> move-btn.mouse-y;
@@ -114,6 +123,7 @@ component BodyItem inherits Rectangle {
 
                         toggled => {
                             entry.is-finished = !entry.is-finished;
+                            Logic.update-record-plan(index, entry);
                         }
                     }
 
@@ -130,12 +140,17 @@ component BodyItem inherits Rectangle {
             padding: Theme.padding;
 
             Rectangle {
-                height: te.font-size * 4;
+                height: Theme.default-font-size * 4;
                 background: Theme.base-background;
 
-                te := TxtEdit {
+                TxtEdit {
                     text: entry.detail;
                     border-color: Theme.base-border-color;
+
+                    edited(text) => {
+                        entry.detail = text;
+                        Logic.update-record-plan(index, entry);
+                    }
                 }
             }
         }
@@ -151,6 +166,10 @@ component Body inherits Flickable {
 
     interactive: false;
     viewport-height: next-item-pos-y;
+
+    public function scroll(rate: float) {
+        root.viewport-y = -(root.viewport-height - root.height) * rate;
+    }
 
     init => {
         next-item-pos-y = 0px;
@@ -169,7 +188,7 @@ component Body inherits Flickable {
             height: item-height;
             index: index;
             entry: entry;
-            is-selected: index == seleted-index;
+            is-selected: index == seleted-index || moving-index == index;
 
             init => {
                 if (index == 0) {
@@ -200,7 +219,7 @@ component Body inherits Flickable {
                     if (event.kind == PointerEventKind.down) {
                         moving-index = index;
                     } else {
-                        Logic.swap-record-plan(moving-index, self.y, item-height + Theme.spacing * 2);
+                        Logic.move-record-plan(moving-index, self.y, item-height + Theme.spacing * 2);
                         moving-index = -1;
                     }
                 }
@@ -222,7 +241,7 @@ export component RecordPlanDialog inherits Dialog {
         spacing: Theme.spacing * 4;
         height: root.inner-height;
 
-        VerticalLayout {
+        vbox := VerticalLayout {
             alignment: center;
 
             HeadBar {
@@ -230,7 +249,45 @@ export component RecordPlanDialog inherits Dialog {
             }
         }
 
-        body := Body { }
+        hbox := HorizontalLayout {
+            height: parent.height - vbox.preferred-height - parent.spacing - parent.padding - parent.padding-top;
+            spacing: Theme.spacing * 2;
+
+            body := Body { }
+
+            // ScrollBar
+            if Store.record-plan-entry.plan.length > 0 && body.viewport-height > self.height: Rectangle {
+                background: Theme.placeholder-text-color;
+                height: Math.max(40px, body.height - body.viewport-height + body.height);
+                width: Theme.padding * 1.5;
+                border-radius: self.width / 2;
+
+                private property <bool> is-scrolling;
+                private property <length> offset-y;
+
+                TouchArea {
+                    mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
+                    moved => {
+                        if (!is-scrolling) {
+                            return;
+                        }
+                        parent.offset-y = self.pressed-y - self.mouse-y;
+                        parent.y = Math.clamp(parent.y - parent.offset-y, 0, body.height - parent.height);
+                        body.scroll(parent.y / (body.height - parent.height));
+                    }
+
+                    pointer-event(event) => {
+                        if (event.button == PointerEventButton.left) {
+                            if (event.kind == PointerEventKind.down) {
+                                is-scrolling = true;
+                            } else {
+                                is-scrolling = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     cancel-clicked => {

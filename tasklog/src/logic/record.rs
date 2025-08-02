@@ -313,17 +313,38 @@ pub fn init(ui: &AppWindow) {
             .collect::<Vec<_>>();
 
         plan_entries_duplicate.remove(index as usize);
-        plan_entries.set_vec(&*plan_entries_duplicate);
+        plan_entries.set_vec(plan_entries_duplicate);
+        ui.global::<Store>().set_next_record_plan_item_pos_y(0.0);
+        ui.global::<Logic>().invoke_update_record(record_entry);
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_remove_all_record_plans(move || {
+        let ui = ui_handle.unwrap();
+        let record_entry = ui.global::<Store>().get_record_plan_entry();
+        let plan_entries = store_current_record_plan!(record_entry.plan);
+
+        plan_entries.set_vec(vec![]);
         ui.global::<Store>().set_next_record_plan_item_pos_y(0.0);
         ui.global::<Logic>().invoke_update_record(record_entry);
     });
 
     let ui_handle = ui.as_weak();
     ui.global::<Logic>()
-        .on_swap_record_plan(move |start_index, y, item_height| {
+        .on_update_record_plan(move |index, entry| {
+            let ui = ui_handle.unwrap();
+            let record_entry = ui.global::<Store>().get_record_plan_entry();
+            let plan_entries = store_current_record_plan!(record_entry.plan);
+
+            plan_entries.set_row_data(index as usize, entry);
+            ui.global::<Logic>().invoke_update_record(record_entry);
+        });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>()
+        .on_move_record_plan(move |start_index, y, item_height| {
             let ui = ui_handle.unwrap();
             let start_index = start_index as usize;
-
             let record_entry = ui.global::<Store>().get_record_plan_entry();
             let plan_entries = store_current_record_plan!(record_entry.plan);
             let row_count = plan_entries.row_count();
@@ -335,9 +356,14 @@ pub fn init(ui: &AppWindow) {
                 .iter()
                 .map(|item| item.clone())
                 .collect::<Vec<_>>();
+            let moving_plan_entry = plan_entries_duplicate[start_index].clone();
 
-            plan_entries_duplicate.swap(start_index, end_index);
-            plan_entries.set_vec(&*plan_entries_duplicate);
+            if start_index != end_index {
+                plan_entries_duplicate.remove(start_index);
+                plan_entries_duplicate.insert(end_index, moving_plan_entry);
+            }
+
+            plan_entries.set_vec(plan_entries_duplicate);
             ui.global::<Store>().set_next_record_plan_item_pos_y(0.0);
             ui.global::<Logic>().invoke_update_record(record_entry);
         });

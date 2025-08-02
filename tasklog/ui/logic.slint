@@ -78,9 +78,11 @@ export global Logic {
 
     callback add-record-plan();
     callback remove-record-plan(index: int);
+    callback remove-all-record-plans();
+    callback update-record-plan(index: int, entry: RecordPlanEntry);
     callback ai-generate-record-plan();
     callback open-record-plan-dialog(index: int);
-    callback swap-record-plan(start-index: int, y: length, item-height: length);
+    callback move-record-plan(start-index: int, y: length, item-height: length);
 
     pure callback current-record-plan-step(entries: [RecordPlanEntry]) -> int;
     pure callback calc-record-plan-steps(counts: int) -> [string];

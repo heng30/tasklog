@@ -27,7 +27,7 @@ export component RecordEditDialog inherits Dialog {
         }
     }
 
-    VerticalLayout {
+    vbox := VerticalLayout {
         height: Math.min(root.inner-height, self.preferred-height);
 
         SettingDetailInner {
@@ -173,9 +173,10 @@ export component RecordEditDialog inherits Dialog {
 
     dp := DatePickerPopup {
         x: (root.width - self.width) / 2;
-        y: 100px;
+        y: 50px;
 
         init => {
+            debug(self.x, self.y);
             self.set-date(Util.parse-date-str(dp-set-date-str));
         }
 

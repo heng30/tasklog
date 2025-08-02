@@ -31,6 +31,9 @@ pub fn init(ui: &AppWindow) {
                     ui.global::<Logic>()
                         .invoke_remove_record_plan(current_index);
                 }
+                "remove-all-record-plans" => {
+                    ui.global::<Logic>().invoke_remove_all_record_plans();
+                }
                 _ => (),
             }
         });
