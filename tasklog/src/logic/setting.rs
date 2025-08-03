@@ -1,7 +1,7 @@
 use super::tr::tr;
 use crate::{
     config,
-    slint_generatedAppWindow::{AppWindow, Logic, SettingProxy, Store, Theme},
+    slint_generatedAppWindow::{AppWindow, Logic, SettingModel, Store, Theme},
 };
 use slint::ComponentHandle;
 
@@ -77,25 +77,21 @@ pub fn init(ui: &AppWindow) {
         ui.global::<Store>().set_setting_preference(setting);
     });
 
-    ui.global::<Logic>().on_get_setting_proxy(move || {
-        let config = config::proxy();
+    ui.global::<Logic>().on_get_setting_model(move || {
+        let config = config::model();
 
-        SettingProxy {
-            proxy_type: "Http".into(),
-            http_url: config.http_url.into(),
-            http_port: slint::format!("{}", config.http_port),
-            socks5_url: config.socks5_url.into(),
-            socks5_port: slint::format!("{}", config.socks5_port),
+        SettingModel {
+            api_base_url: config.api_base_url.into(),
+            model_name: config.model_name.into(),
+            api_key: config.api_key.into(),
         }
     });
 
-    ui.global::<Logic>().on_set_setting_proxy(move |setting| {
+    ui.global::<Logic>().on_set_setting_model(move |setting| {
         let mut all = config::all();
-
-        all.proxy.http_url = setting.http_url.into();
-        all.proxy.http_port = setting.http_port.parse().unwrap_or(3218);
-        all.proxy.socks5_url = setting.socks5_url.into();
-        all.proxy.socks5_port = setting.socks5_port.parse().unwrap_or(1080);
+        all.model.api_base_url = setting.api_base_url.into();
+        all.model.model_name = setting.model_name.into();
+        all.model.api_key = setting.api_key.into();
         _ = config::save(all);
     });
 }

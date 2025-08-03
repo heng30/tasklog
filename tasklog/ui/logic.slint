@@ -1,4 +1,4 @@
-import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry, RecordPlanEntry } from "store.slint";
+import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry, RecordPlanEntry, SettingModel } from "store.slint";
 
 import { Theme } from "theme.slint";
 
@@ -51,6 +51,8 @@ export global Logic {
     }
 
     //////////////////////////////// Logic Start  ////////////////////////////////
+    callback get-setting-model() -> SettingModel;
+    callback set-setting-model(setting: SettingModel);
 
     callback refresh-records();
     callback new-record(entry: RecordEntry);

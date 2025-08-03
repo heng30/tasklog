@@ -1,8 +1,9 @@
 import { Logic, Theme, Store, Util, TabIndex, PopupIndex, Icons, SettingPreference, SettingProxy, SettingDetailIndex, DeviceType } from "../def.slint";
 import { IconBtn, SettingEntryV2, Head, SettingDetail, ToastStatus, About, Dialog, ComponentPosition, TabBtns, Help } from "../../base/widgets.slint";
+import { SettingModel } from "../../store.slint";
 import { Preference } from "components/preference.slint";
+import { Model } from "components/model.slint";
 import { Donate } from "components/donate.slint";
-// import { HelpDetail } from "components/help-detail.slint";
 
 component RightPanel inherits Rectangle {
     background: Theme.base-background;
@@ -27,6 +28,22 @@ component RightPanel inherits Rectangle {
             Logic.set-setting-preference(self.get());
         }
     }
+
+    model := Model {
+        visible: Store.current-setting-detail-index == SettingDetailIndex.Model;
+        is-show-header: false;
+
+        private property <SettingModel> setting;
+
+        confirmed => {
+            setting = self.get();
+            if (setting.api-base-url.is_empty || setting.model-name.is_empty || setting.api-key.is_empty) {
+                Util.show-toast(Logic.tr("Input can not be empty"), ToastStatus.Warning);
+                return;
+            }
+            Logic.set-setting-model(setting);
+        }
+    }
 }
 
 component Setting inherits Rectangle {
@@ -40,11 +57,14 @@ component Setting inherits Rectangle {
             TabBtns {
                 items: [
                     { icon: Icons.ui, text: Logic.tr("Preference") },
+                    { icon: Icons.model-light, text: Logic.tr("Model") },
                 ];
 
                 clicked(index) => {
                     if (index == 0) {
                         Logic.switch-setting-detail(SettingDetailIndex.Preference);
+                    } else if (index == 1) {
+                        Logic.switch-setting-detail(SettingDetailIndex.Model);
                     }
                 }
             }
@@ -97,8 +117,6 @@ export component HelpDialog inherits Dialog {
     Help {
         height: root.inner-height;
         is-show-header: false;
-
-        // HelpDetail { }
     }
 
     cancel-clicked => {

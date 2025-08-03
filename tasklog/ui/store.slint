@@ -23,6 +23,7 @@ export enum PopupIndex {
 
 export enum SettingDetailIndex {
     Preference,
+    Model,
 }
 
 export struct SettingPreference {
@@ -69,6 +70,12 @@ export struct RecordEntry{
     tags: [string],
 }
 
+export struct SettingModel {
+    model-name: string,
+    api-base-url: string,
+    api-key: string,
+}
+
 //////////////////////////////// Logic Struct End  ////////////////////////////////
 
 export global Store {
@@ -78,7 +85,7 @@ export global Store {
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
     in-out property <TabIndex> current-tab-index: TabIndex.Home;
-    in-out property <PopupIndex> current-popup-index: PopupIndex.RecordPlan;
+    in-out property <PopupIndex> current-popup-index: PopupIndex.None;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";

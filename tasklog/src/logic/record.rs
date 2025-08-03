@@ -1,5 +1,6 @@
 use super::{toast, tr::tr};
 use crate::{
+    config,
     db::{
         self,
         def::{RecordEntry, RECORD_TABLE as DB_TABLE},
@@ -19,7 +20,7 @@ use async_openai::{
     Client,
 };
 use regex::Regex;
-use slint::{ComponentHandle, Model, ModelRc, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, VecModel, Weak};
 use uuid::Uuid;
 
 #[macro_export]
@@ -553,7 +554,7 @@ fn ai_generate_record_plans(ui: &AppWindow) {
             let task = entry.title.to_string();
 
             tokio::spawn(async move {
-                match send_record_plan_question_to_ai(days as u32, &task).await {
+                match send_record_plan_question_to_ai(ui.clone(), days as u32, &task).await {
                     Ok(plans) => {
                         _ = slint::invoke_from_event_loop(move || {
                             let ui = ui.unwrap();
@@ -614,17 +615,29 @@ fn ai_generate_record_plans(ui: &AppWindow) {
     }
 }
 
-async fn send_record_plan_question_to_ai(days: u32, task: &str) -> Result<Vec<String>> {
+async fn send_record_plan_question_to_ai(
+    ui: Weak<AppWindow>,
+    days: u32,
+    task: &str,
+) -> Result<Vec<String>> {
+    let preference_setting = config::preference();
+    let model_setting = config::model();
     let re = Regex::new(r"(?s)```[\s]*(.*?)[\s]*```").unwrap();
 
-    // TODO
-    let is_cn = true;
-    let api_key = std::env::var("OPENAI_API_KEY").unwrap();
-    let api_base = "https://api.deepseek.com/v1";
+    if model_setting.api_key.is_empty()
+        || model_setting.model_name.is_empty()
+        || model_setting.api_base_url.is_empty()
+    {
+        toast::async_toast_info(
+            ui,
+            format!("{}", tr("Please configure model setting firstly")),
+        );
+    }
 
+    let is_cn = preference_setting.language == "cn";
     let config = async_openai::config::OpenAIConfig::new()
-        .with_api_key(api_key)
-        .with_api_base(api_base);
+        .with_api_key(&model_setting.api_key)
+        .with_api_base(&model_setting.api_base_url);
 
     let client = Client::with_config(config);
 
@@ -652,7 +665,7 @@ Output format:
 
     let request = CreateChatCompletionRequestArgs::default()
         .temperature(1.0)
-        .model("deepseek-chat")
+        .model(model_setting.model_name)
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
                 .content(prompt)

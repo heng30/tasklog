@@ -112,7 +112,7 @@ component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
     in-out property <int> current-index;
 
-    private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover;
+    private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover || led-number-ta.has-hover || progress-ta.has-hover;
 
     preferred-width: vbox.preferred-width;
     preferred-height: vbox.preferred-height;
@@ -155,7 +155,7 @@ component TaskCard inherits Rectangle {
         progress: Logic.record-progress(entry);
         height: self.width;
 
-        TouchArea {
+        progress-ta := TouchArea {
             mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
             clicked => {
                 Logic.open-record-plan-dialog(current-index);
@@ -224,7 +224,7 @@ component TaskCard inherits Rectangle {
                 colorize: Logic.state-color(entry.state);
                 numbers: entry.state == RecordState.NotStarted ? Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date) : Logic.remain-days-numbers(entry.start-date, entry.end-date);
 
-                TouchArea {
+                led-number-ta := TouchArea {
                     mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;
                     clicked => {
                         Logic.open-record-dialog(current-index);

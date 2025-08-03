@@ -128,6 +128,6 @@ export global Util {
     }
 
     pure public function date-str(date: Date) -> string {
-        return date.year + "-" + date.month + "-" + date.day;
+        return date.year + "-" + (date.month < 10 ? "0" + date.month : date.month) + "-" + (date.day < 10 ? "0" + date.day : date.day);
     }
 }

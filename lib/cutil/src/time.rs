@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::{Datelike, Duration, Local, NaiveDate, Weekday};
+use chrono::{Datelike, Duration, Local, NaiveDate, TimeZone, Weekday};
 
 #[derive(Debug, Clone)]
 pub struct Date {
@@ -79,12 +79,10 @@ pub fn get_calendar_matrix(year: i32, month: u32) -> Result<Vec<Vec<Date>>> {
 
 pub fn date_str_to_timestamp(date_str: &str) -> Result<i64> {
     let date = NaiveDate::parse_from_str(date_str, "%Y-%m-%d")?;
-
     let datetime = date
         .and_hms_opt(0, 0, 0)
         .ok_or(anyhow::anyhow!("Invalid time specification"))?;
-
-    Ok(datetime.and_utc().timestamp())
+    Ok(Local.from_local_datetime(&datetime).unwrap().timestamp())
 }
 
 pub fn diff_dates_to_days(start_date: &str, end_date: &str) -> Result<i64> {

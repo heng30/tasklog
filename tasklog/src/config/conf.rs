@@ -71,8 +71,8 @@ pub fn preference() -> data::Preference {
     CONFIG.lock().unwrap().preference.clone()
 }
 
-pub fn proxy() -> data::Proxy {
-    CONFIG.lock().unwrap().proxy.clone()
+pub fn model() -> data::Model {
+    CONFIG.lock().unwrap().model.clone()
 }
 
 #[cfg(feature = "database")]
@@ -154,7 +154,7 @@ impl Config {
                 Ok(c) => {
                     self.appid = c.appid;
                     self.preference = c.preference;
-                    self.proxy = c.proxy;
+                    self.model = c.model;
                     Ok(())
                 }
                 Err(_) => {

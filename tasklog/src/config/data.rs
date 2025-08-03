@@ -24,7 +24,7 @@ pub struct Config {
 
     pub preference: Preference,
 
-    pub proxy: Proxy,
+    pub model: Model,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Derivative)]
@@ -48,26 +48,17 @@ pub struct Preference {
     #[derivative(Default(value = "false"))]
     pub always_on_top: bool,
 
-    #[derivative(Default(value = "true"))]
+    #[derivative(Default(value = "false"))]
     pub no_frame: bool,
 
     pub is_dark: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Derivative)]
-#[derivative(Default)]
-pub struct Proxy {
-    #[derivative(Default(value = "\"127.0.0.1\".to_string()"))]
-    pub http_url: String,
-
-    #[derivative(Default(value = "3128"))]
-    pub http_port: u16,
-
-    #[derivative(Default(value = "\"127.0.0.1\".to_string()"))]
-    pub socks5_url: String,
-
-    #[derivative(Default(value = "1080"))]
-    pub socks5_port: u16,
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Model {
+    pub api_base_url: String,
+    pub model_name: String,
+    pub api_key: String,
 }
 
 pub fn appid_default() -> String {

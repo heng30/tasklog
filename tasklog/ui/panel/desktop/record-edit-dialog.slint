@@ -14,16 +14,12 @@ export component RecordEditDialog inherits Dialog {
     private property <Date> current-date: Util.get-current-date();
     private property <string> dp-set-date-str;
 
-    function date-str(date: Date) -> string {
-        return date.year + "-" + date.month + "-" + date.day;
-    }
-
     init => {
         if (Store.edit-record-entry.uuid.is-empty) {
             Store.edit-record-entry = clean-entry;
             Store.edit-record-entry.state = RecordState.Running;
-            Store.edit-record-entry.start-date = date-str(current-date);
-            Store.edit-record-entry.end-date = date-str(current-date);
+            Store.edit-record-entry.start-date = Util.date-str(current-date);
+            Store.edit-record-entry.end-date = Util.date-str(current-date);
         }
     }
 
@@ -176,15 +172,14 @@ export component RecordEditDialog inherits Dialog {
         y: 50px;
 
         init => {
-            debug(self.x, self.y);
             self.set-date(Util.parse-date-str(dp-set-date-str));
         }
 
         confirmed(date) => {
             if (is-set-start-date) {
-                start-date-lineedit.text = date-str(date);
+                start-date-lineedit.text = Util.date-str(date);
             } else {
-                end-date-lineedit.text = date-str(date);
+                end-date-lineedit.text = Util.date-str(date);
             }
         }
     }
@@ -198,8 +193,8 @@ export component RecordEditDialog inherits Dialog {
         Store.edit-record-entry.end-date = end-date-lineedit.text;
         Store.edit-record-entry.title = task-name-lineedit.text;
 
-        if (Store.edit-record-entry.start-date >= Store.edit-record-entry.end-date) {
-            Util.show-toast(Logic.tr("End date should greater than start date."), ToastStatus.Warning);
+        if (Logic.remain-days(Store.edit-record-entry.start-date, Store.edit-record-entry.end-date) <= 0) {
+            Util.show-toast(Logic.tr("End date should greater than start date"), ToastStatus.Warning);
             return;
         }
         Logic.switch-popup(PopupIndex.None);
