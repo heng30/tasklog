@@ -8,8 +8,17 @@ use crate::{
         AppWindow, Logic, PopupIndex, RecordEntry as UIRecordEntry,
         RecordPlanEntry as UIRecordPlanEntry, RecordState as UIRecordState, Store,
     },
-    toast_success,
+    toast_success, toast_warn,
 };
+use anyhow::Result;
+use async_openai::{
+    types::{
+        ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
+        CreateChatCompletionRequestArgs,
+    },
+    Client,
+};
+use regex::Regex;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use uuid::Uuid;
 
@@ -163,6 +172,7 @@ pub fn init(ui: &AppWindow) {
     ui.global::<Logic>().on_refresh_records(move || {
         let ui = ui_handle.unwrap();
         record_init(&ui);
+        toast_success!(ui, tr("Refresh successfully"));
     });
 
     let ui_handle = ui.as_weak();
@@ -343,6 +353,10 @@ pub fn init(ui: &AppWindow) {
     let ui_handle = ui.as_weak();
     ui.global::<Logic>()
         .on_move_record_plan(move |start_index, y, item_height| {
+            if start_index < 0 {
+                return;
+            }
+
             let ui = ui_handle.unwrap();
             let start_index = start_index as usize;
             let record_entry = ui.global::<Store>().get_record_plan_entry();
@@ -368,28 +382,13 @@ pub fn init(ui: &AppWindow) {
             ui.global::<Logic>().invoke_update_record(record_entry);
         });
 
-    ui.global::<Logic>().on_calc_record_plan_steps(|counts| {
-        ModelRc::new(VecModel::from_slice(
-            (0..=counts)
-                .map(|index| slint::format!("{}", index + 1))
-                .collect::<Vec<_>>()
-                .as_slice(),
-        ))
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_ai_generate_record_plans(move || {
+        let ui = ui_handle.unwrap();
+        ui.global::<Store>().set_is_ai_generate_record_plans(true);
+        ui.global::<Logic>().invoke_remove_all_record_plans();
+        ai_generate_record_plans(&ui);
     });
-
-    ui.global::<Logic>()
-        .on_current_record_plan_step(|entries, _| {
-            let mut index = 0;
-            for entry in entries.iter() {
-                if !entry.is_finished {
-                    return index;
-                }
-
-                index += 1;
-            }
-
-            index
-        });
 }
 
 fn record_init(ui: &AppWindow) {
@@ -542,4 +541,155 @@ pub fn delete_db_entry(ui: &AppWindow, uuid: String) {
             _ => (),
         }
     });
+}
+
+fn ai_generate_record_plans(ui: &AppWindow) {
+    let entry = ui.global::<Store>().get_record_plan_entry();
+
+    match cutil::time::diff_dates_to_days(&entry.start_date, &entry.end_date) {
+        Ok(days) if days > 0 => {
+            let ui = ui.as_weak();
+            let uuid = entry.uuid.to_string();
+            let task = entry.title.to_string();
+
+            tokio::spawn(async move {
+                match send_record_plan_question_to_ai(days as u32, &task).await {
+                    Ok(plans) => {
+                        _ = slint::invoke_from_event_loop(move || {
+                            let ui = ui.unwrap();
+                            let record_entry = ui.global::<Store>().get_record_plan_entry();
+
+                            if record_entry.uuid == uuid {
+                                let plan_entries = store_current_record_plan!(record_entry.plan);
+
+                                let plans = plans
+                                    .into_iter()
+                                    .map(|item| UIRecordPlanEntry {
+                                        detail: item.into(),
+                                        ..Default::default()
+                                    })
+                                    .collect::<Vec<UIRecordPlanEntry>>();
+
+                                plan_entries.set_vec(plans);
+                                ui.global::<Logic>().invoke_update_record(record_entry);
+                            }
+
+                            ui.global::<Store>().set_is_ai_generate_record_plans(false);
+                            toast_success!(ui, tr("Generate task plans successfully"));
+                        });
+                    }
+                    Err(e) => {
+                        _ = slint::invoke_from_event_loop(move || {
+                            let ui = ui.unwrap();
+                            ui.global::<Store>().set_is_ai_generate_record_plans(false);
+
+                            toast_warn!(
+                                ui,
+                                format!(
+                                    "{}. {}: {e:?}",
+                                    tr("Generate task plans failed"),
+                                    tr("Reason")
+                                )
+                            );
+                        });
+                    }
+                }
+            });
+        }
+        Err(e) => toast_warn!(
+            ui,
+            format!(
+                "{}. {}: {e:?}",
+                tr("parse date string failed"),
+                tr("Reason")
+            )
+        ),
+        _ => toast_warn!(
+            ui,
+            format!(
+                "end date({}) is not greater than start date({})",
+                entry.end_date, entry.start_date
+            )
+        ),
+    }
+}
+
+async fn send_record_plan_question_to_ai(days: u32, task: &str) -> Result<Vec<String>> {
+    let re = Regex::new(r"(?s)```[\s]*(.*?)[\s]*```").unwrap();
+
+    // TODO
+    let is_cn = true;
+    let api_key = std::env::var("OPENAI_API_KEY").unwrap();
+    let api_base = "https://api.deepseek.com/v1";
+
+    let config = async_openai::config::OpenAIConfig::new()
+        .with_api_key(api_key)
+        .with_api_base(api_base);
+
+    let client = Client::with_config(config);
+
+    let prompt = r#"You are a master task planner.
+Input format:
+{
+    "days": "Time planned to complete the task.",
+    "task": "Task content."
+}
+
+Output format:
+```json
+["detail1", "detail2", ...]
+```"#;
+
+    let user_message = format!(
+        "Task detail: {}\nOutput language: {}",
+        serde_json::json!({
+            "days": days,
+            "task": task,
+        })
+        .to_string(),
+        if is_cn { "Chinese" } else { "English" }
+    );
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .temperature(1.0)
+        .model("deepseek-chat")
+        .messages([
+            ChatCompletionRequestSystemMessageArgs::default()
+                .content(prompt)
+                .build()?
+                .into(),
+            ChatCompletionRequestUserMessageArgs::default()
+                .content(user_message)
+                .build()?
+                .into(),
+        ])
+        .build()?;
+
+    log::debug!("{}", serde_json::to_string(&request).unwrap());
+
+    let response = client.chat().create(request).await?;
+
+    let content = response
+        .choices
+        .iter()
+        .next()
+        .ok_or(anyhow::anyhow!("No response content"))?
+        .message
+        .content
+        .clone()
+        .ok_or(anyhow::anyhow!("No response content"))?
+        .replace("```json", "```");
+
+    log::debug!("\nResponse:\n{}", content);
+
+    let task = re
+        .captures_iter(&content)
+        .filter_map(|cap| cap.get(1).map(|m| m.as_str().trim().to_string()))
+        .collect::<Vec<_>>();
+
+    if task.len() > 0 {
+        Ok(serde_json::from_str::<Vec<String>>(&task[0])?)
+    } else {
+        Err(anyhow::anyhow!("No response content"))
+    }
 }

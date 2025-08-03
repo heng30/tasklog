@@ -78,7 +78,7 @@ export global Store {
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
     in-out property <TabIndex> current-tab-index: TabIndex.Home;
-    in-out property <PopupIndex> current-popup-index: PopupIndex.None;
+    in-out property <PopupIndex> current-popup-index: PopupIndex.RecordPlan;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
     in-out property <bool> is-cn: setting-preference.language == "cn";
@@ -96,6 +96,7 @@ export global Store {
     //////////////////////////////// Logic Start ////////////////////////////////
     in-out property <RecordEntry> record-plan-entry: record-entries[0];
     in-out property <length> next-record-plan-item-pos-y: 0px;
+    in-out property <bool> is-ai-generate-record-plans;
 
     in-out property <RecordEntry> edit-record-entry;
     in-out property <[RecordEntry]> record-entries-cache: [];

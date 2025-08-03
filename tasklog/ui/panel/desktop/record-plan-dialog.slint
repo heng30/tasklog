@@ -1,6 +1,6 @@
 import { RecordPlanEntry, PopupIndex } from "../../store.slint";
 import { Theme, Icons, Store, Util, Logic } from "../def.slint";
-import { NoMessageImg, ConfirmDialogSetting, CenterLayout, TxtEdit, Label, IconBtn, GainFocus, SwitchBtn, Dialog } from "../../base/widgets.slint";
+import { NoMessageImg, ConfirmDialogSetting, CenterLayout, TxtEdit, Label, IconBtn, GainFocus, SwitchBtn, Dialog, SkeletonType, Skeleton } from "../../base/widgets.slint";
 
 component HeadBar inherits HorizontalLayout {
     in-out property <int> seleted-index;
@@ -50,7 +50,11 @@ component HeadBar inherits HorizontalLayout {
                     hover-color: Store.setting-preference.is-dark ? Theme.secondary-background.darker(50%) : Theme.secondary-background.darker(5%);
 
                     clicked => {
-                        ConfirmDialogSetting.set(true, Logic.tr("Info"), Logic.tr("Use ai to generate plan or not"), "ai-generate-record-plan", "");
+                        if (Store.record-plan-entry.plan.length == 0) {
+                            Logic.ai-generate-record-plans();
+                        } else {
+                            ConfirmDialogSetting.set(true, Logic.tr("Info"), Logic.tr("Remove all plans and use ai to generate new plans"), "ai-generate-record-plans", "");
+                        }
                     }
                 }
 
@@ -252,7 +256,7 @@ export component RecordPlanDialog inherits Dialog {
         vbox := VerticalLayout {
             alignment: center;
 
-            HeadBar {
+            hb := HeadBar {
                 seleted-index: body.seleted-index;
             }
         }
@@ -264,14 +268,21 @@ export component RecordPlanDialog inherits Dialog {
             private property <bool> is-show-scrollbar: Store.record-plan-entry.plan.length > 0 && body.viewport-height > self.height;
 
             Rectangle {
-                if Store.record-plan-entry.plan.length == 0: CenterLayout {
+                if !Store.is-ai-generate-record-plans && Store.record-plan-entry.plan.length == 0: CenterLayout {
                     NoMessageImg {
                         width: root.width;
                         text: Logic.tr("No Message");
                     }
                 }
 
+                if Store.is-ai-generate-record-plans && Store.record-plan-entry.plan.length == 0: Skeleton {
+                    y: Theme.padding * 2;
+                    type: SkeletonType.List;
+                    height: Math.min(200px, hbox.height * 0.4);
+                }
+
                 body := Body {
+                    visible: Store.record-plan-entry.plan.length > 0;
                     private property <float> scroll-rate;
 
                     flicked => {

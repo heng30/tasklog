@@ -11,12 +11,14 @@ slint.workspace = true
 [target.'cfg(any(target_os = "windows", target_os = "linux", target_os = "macos", target_os = "android"))'.dependencies]
 rand.workspace = true
 toml.workspace = true
+regex.workspace = true
 anyhow.workspace = true
 once_cell.workspace = true
 webbrowser.workspace = true
 derivative.workspace = true
 serde_with.workspace = true
 serde_json.workspace = true
+async-openai.workspace = true
 sqldb = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 qrcode = { workspace = true, optional = true }

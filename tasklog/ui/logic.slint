@@ -80,15 +80,9 @@ export global Logic {
     callback remove-record-plan(index: int);
     callback remove-all-record-plans();
     callback update-record-plan(index: int, entry: RecordPlanEntry);
-    callback ai-generate-record-plan();
+    callback ai-generate-record-plans();
     callback open-record-plan-dialog(index: int);
     callback move-record-plan(start-index: int, y: length, item-height: length);
-
-    pure callback current-record-plan-step(entries: [RecordPlanEntry], flag: bool) -> int;
-    pure callback calc-record-plan-steps(counts: int) -> [string];
-    calc-record-plan-steps() => {
-        ["1", "2", "3", "4", "5"];
-    }
 
     pure public function state-color(state: RecordState) -> color {
         if (state == RecordState.Running) {
