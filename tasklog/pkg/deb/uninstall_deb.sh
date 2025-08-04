@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sudo dpkg --remove slint-template
+sudo dpkg --remove tasklog
 exit $?

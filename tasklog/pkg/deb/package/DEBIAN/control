@@ -1,9 +1,9 @@
-Package: slint-template
+Package: tasklog
 Version: 0.1.0
 Architecture: amd64
 Maintainer: heng30
 Depends:
 Section: utils
 Priority: optional
-Homepage: https://github.com/heng30/slint-template
-Description: Rust Slint GUI template project（Rust Slint GUI 模板项目）
+Homepage: https://github.com/heng30/tasklog
+Description: It's a dead simple task track application.(一个极简的任务追踪软件)

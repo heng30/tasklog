@@ -1,17 +1,16 @@
 <div style="display: flex, margin: 8px">
-    <img src="./screenshot/1-cn.png" width="100"/>
-    <img src="./screenshot/2-cn.png" width="100"/>
-    <img src="./screenshot/3-cn.png" width="100"/>
-    <img src="./screenshot/4-cn.png" width="100"/>
-    <img src="./screenshot/5-cn.png" width="100"/>
-    <img src="./screenshot/6-cn.png" width="100"/>
-    <img src="./screenshot/7-cn.png" width="100"/>
+    <img src="./screenshot/1.png" width="100"/>
 </div>
 
 [English Documentation](./README.md)
 
 ### 简介
-这是一个简单的任务记录软件。
+一个极简的任务追踪软件。
+
+### 功能
+- 添加、修改、删除、归档和恢复任务
+- 使用AI生成任务计划
+- 查看任务统计信息
 
 ### 如何构建?
 - 安装 `Rust` 和 `Cargo`

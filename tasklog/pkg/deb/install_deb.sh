@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sudo dpkg -i slint-template.deb
+sudo dpkg -i tasklog.deb
 exit $?

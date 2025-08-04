@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=tasklog
+Exec=/usr/local/bin/tasklog
+Icon=tasklog
+Terminal=false
+Type=Application
+Categories=Utility;Development;
+StartupNotify=true
+StartupWMClass=tasklog
+Comment=Description: It's a dead simple task track application.(一个极简的任务追踪软件)

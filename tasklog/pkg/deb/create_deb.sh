@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-app_name="slint-template"
+app_name="tasklog"
 icon_name="brand.png"
 icon_dir="../../ui/images"
 bin_dir="./package/usr/local/bin"

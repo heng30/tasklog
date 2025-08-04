@@ -1,17 +1,16 @@
 <div style="display: flex, margin: 8px">
-    <img src="./screenshot/1-en.png" width="100"/>
-    <img src="./screenshot/2-en.png" width="100"/>
-    <img src="./screenshot/3-en.png" width="100"/>
-    <img src="./screenshot/4-en.png" width="100"/>
-    <img src="./screenshot/5-en.png" width="100"/>
-    <img src="./screenshot/6-en.png" width="100"/>
-    <img src="./screenshot/7-en.png" width="100"/>
+    <img src="./screenshot/1.png" width="100"/>
 </div>
 
 [中文文档](./README.zh-CN.md)
 
 ### Introduction
 It's a dead simple task track application.
+
+### Features
+- Add, modify, delete, archive, and restore tasks
+- Generate task plans using AI
+- View task statistics
 
 ### How to build?
 - Install `Rust` and `Cargo`
