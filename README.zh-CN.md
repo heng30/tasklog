@@ -1,6 +1,4 @@
-<div style="display: flex, margin: 8px">
-    <img src="./screenshot/1.png" width="100"/>
-</div>
+<img src="./screenshot/1.png" width="100"/>
 
 [English Documentation](./README.md)
 

@@ -1,6 +1,4 @@
-<div style="display: flex, margin: 8px">
     <img src="./screenshot/1.png" width="100"/>
-</div>
 
 [中文文档](./README.zh-CN.md)
 
