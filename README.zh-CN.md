@@ -1,4 +1,4 @@
-<img src="./screenshot/1.png" width="100"/>
+![screenshot](./screenshot/1.png)
 
 [English Documentation](./README.md)
 

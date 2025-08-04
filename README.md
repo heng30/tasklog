@@ -1,4 +1,4 @@
-    <img src="./screenshot/1.png" width="100"/>
+![screenshot](./screenshot/1.png)
 
 [中文文档](./README.zh-CN.md)
 
