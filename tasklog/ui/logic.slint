@@ -1,5 +1,5 @@
 import { Store,  SettingPreference, SettingProxy, TabIndex, PopupIndex, SettingDetailIndex, RecordState, RecordEntry, RecordPlanEntry, RecordPlanEntry, SettingModel } from "store.slint";
-
+import { ChartBarEntry } from "base/def.slint";
 import { Theme } from "theme.slint";
 
 export global Logic {
@@ -88,7 +88,23 @@ export global Logic {
 
     callback statistic-init();
     pure callback statistic-total-days-spent(entries: [RecordEntry]) -> int;
-    // pure callback statistic-mean-days-spent(entries: [RecordEntry]) -> int;
+    pure callback statistic-chart-days-spent(entries: [RecordEntry]) -> [ChartBarEntry];
+    pure callback statistic-chart-mean-days-spent(entries: [RecordEntry]) -> [ChartBarEntry];
+    pure callback statistic-chart-tasks-count(entries: [RecordEntry]) -> [ChartBarEntry];
+    statistic-chart-tasks-count(entries) => {
+        return [
+            {
+                label: Logic.tr("NotStarted"),
+                value: 1,
+                color: Logic.state-color(RecordState.NotStarted),
+            },
+            {
+                label: Logic.tr("Running"),
+                value: 3,
+                color: Logic.state-color(RecordState.Running),
+            },
+        ];
+    }
 
     pure public function state-color(state: RecordState) -> color {
         if (state == RecordState.Running) {
