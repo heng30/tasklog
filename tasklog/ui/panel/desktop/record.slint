@@ -161,25 +161,25 @@ component TaskCard inherits Rectangle {
             PopupActionSetting.show(self.absolute-position.x + self.mouse-x + Theme.padding, self.absolute-position.y + self.mouse-y + Theme.padding, [
                 {
                     icon: Icons.edit,
-                    text: "Edit",
+                    text: Logic.tr("Edit"),
                     action: "edit-record",
                     user-data: current-index,
                 },
                 {
                     icon: Icons.plan-fill,
-                    text: "Plan",
+                    text: Logic.tr("Plan"),
                     action: "plan-record",
                     user-data: current-index,
                 },
                 {
                     icon: Icons.archive-fill,
-                    text: "Archive",
+                    text: Logic.tr("Archive"),
                     action: "archive-record",
                     user-data: current-index,
                 },
                 {
                     icon: Icons.delete-fill,
-                    text: "Remove",
+                    text: Logic.tr("Remove"),
                     action: "remove-record",
                     user-data: current-index,
                 },

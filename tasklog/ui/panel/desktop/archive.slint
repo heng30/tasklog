@@ -93,13 +93,13 @@ export component TableBody inherits ListView {
                         PopupActionSetting.show(self.absolute-position.x + self.mouse-x + Theme.padding, self.absolute-position.y + self.mouse-y + Theme.padding, [
                             {
                                 icon: Icons.recover,
-                                text: "Recover",
+                                text: Logic.tr("Recover"),
                                 action: "recover-archive",
                                 user-data: index,
                             },
                             {
                                 icon: Icons.delete-fill,
-                                text: "Remove",
+                                text: Logic.tr("Remove"),
                                 action: "remove-archive",
                                 user-data: index,
                             },
