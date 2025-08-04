@@ -84,7 +84,7 @@ export global Store {
     in-out property <bool> is-show-landing-page: false;
 
     in-out property <TabIndex> previous-tab-index: TabIndex.Home;
-    in-out property <TabIndex> current-tab-index: TabIndex.Home;
+    in-out property <TabIndex> current-tab-index: TabIndex.Statistic;
     in-out property <PopupIndex> current-popup-index: PopupIndex.None;
     in-out property <SettingDetailIndex> current-setting-detail-index: SettingDetailIndex.Preference;
 
@@ -171,6 +171,25 @@ export global Store {
                 { detail : "A simple plane4", is-finished: false },
                 { detail : "A simple plane5", is-finished: false },
             ],
+            state: RecordState.Running,
+            tags: ["Study", "Project", "人物"],
+        },
+        {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
+            state: RecordState.NotStarted,
+            tags: ["Study", "Project", "人物"],
+        },
+    ];
+
+    in-out property <[RecordEntry]> statistic-entries: [
+        {
+            uuid: "uuid-1",
+            start-date: "2025-01-02",
+            end-date: "2025-03-02",
+            title: "Study Deep Learning. hello world, Study Deep Logic Hoeel world",
             state: RecordState.Running,
             tags: ["Study", "Project", "人物"],
         },

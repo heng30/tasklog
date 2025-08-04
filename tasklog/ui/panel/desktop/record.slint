@@ -112,33 +112,19 @@ component TaskCard inherits Rectangle {
     in-out property <RecordEntry> entry;
     in-out property <int> current-index;
 
-    private property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover || led-number-ta.has-hover || progress-ta.has-hover;
+    in-out property <bool> has-hover: ta.has-hover || state-btn.has-hover || more-icon.has-hover || led-number-ta.has-hover || progress-ta.has-hover;
 
+    width: vbox.preferred-width;
+    height: vbox.preferred-height;
     preferred-width: vbox.preferred-width;
     preferred-height: vbox.preferred-height;
+
     background: Theme.secondary-background;
     border-radius: Theme.border-radius * 2;
     border-color: root.has-hover ? Theme.thirdly-brand-color : Theme.base-border-color;
     border-width: Theme.default-border-width;
     drop-shadow-blur: Theme.padding * 2;
     drop-shadow-color: self.border-color;
-
-    states [
-        zoom-in when root.has-hover: {
-            width: vbox.preferred-width + Theme.padding * 2;
-            height: vbox.preferred-height + Theme.padding * 2;
-            in {
-                animate width, height { duration: Theme.default-animate-duration; }
-            }
-            out {
-                animate width, height { duration: Theme.default-animate-duration; }
-            }
-        }
-        zoom-out when !root.has-hover: {
-            width: vbox.preferred-width;
-            height: vbox.preferred-height;
-        }
-    ]
 
     ta := TouchArea { }
 
@@ -206,9 +192,27 @@ component TaskCard inherits Rectangle {
         alignment: LayoutAlignment.center;
 
         num-hbox := Rectangle {
-            width: Theme.icon-size * 12;
-
             private property <Date> current-date: Util.get-current-date();
+
+            width: Theme.icon-size * 12;
+            height: self.preferred-height;
+
+            states [
+                zoom-in when root.has-hover: {
+                    width: Theme.icon-size * 12 + Theme.padding * 2;
+                    height: self.preferred-height + Theme.padding * 2;
+                    in {
+                        animate width, height { duration: Theme.default-animate-duration; }
+                    }
+                    out {
+                        animate width, height { duration: Theme.default-animate-duration; }
+                    }
+                }
+                zoom-out when !root.has-hover: {
+                    width: Theme.icon-size * 12;
+                    height: self.preferred-height;
+                }
+            ]
 
             Label {
                 x: Math.max(0, led-number.x - self.preferred-width);
@@ -337,8 +341,8 @@ export component Record inherits Rectangle {
                     alignment: LayoutAlignment.space-around;
 
                     for column-index in column-counts: Rectangle {
-                        width: tc.width;
-                        height: tc.height;
+                        width: tc.width + Theme.padding * 2;
+                        height: tc.height + Theme.padding * 2;
 
                         tc := TaskCard {
                             private property <bool> is-show-card: self.current-index < Store.record-entries.length;

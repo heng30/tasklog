@@ -86,6 +86,10 @@ export global Logic {
     callback open-record-plan-dialog(index: int);
     callback move-record-plan(start-index: int, y: length, item-height: length);
 
+    callback statistic-init();
+    pure callback statistic-total-days-spent(entries: [RecordEntry]) -> int;
+    // pure callback statistic-mean-days-spent(entries: [RecordEntry]) -> int;
+
     pure public function state-color(state: RecordState) -> color {
         if (state == RecordState.Running) {
             return Theme.thirdly-brand-color;

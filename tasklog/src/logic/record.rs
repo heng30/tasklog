@@ -648,9 +648,10 @@ Input format:
     "task": "Task content."
 }
 
+Describe each step in more detail.
 Output format:
 ```json
-["detail1", "detail2", ...]
+["step", "step2", ...]
 ```"#;
 
     let user_message = format!(

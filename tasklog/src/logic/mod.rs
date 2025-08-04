@@ -45,6 +45,9 @@ mod record;
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 mod archive;
 
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+mod statistic;
+
 pub fn init(ui: &AppWindow) {
     #[cfg(any(
         target_os = "windows",
@@ -67,5 +70,6 @@ pub fn init(ui: &AppWindow) {
     {
         record::init(ui);
         archive::init(ui);
+        statistic::init(ui);
     }
 }

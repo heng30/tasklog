@@ -140,7 +140,6 @@ export component RecordEditDialog inherits Dialog {
                         text: tag-name(Store.edit-record-entry.tags, index);
                         background: Theme.tag-colors[index];
                         is-show-close-btn: true;
-                        font-size: Theme.title5-font-size;
 
                         close => {
                             if (Store.edit-record-entry.tags.length == 1) {
