@@ -8,10 +8,8 @@ version = `git describe --tags --abbrev=0`
 build-env =
 android-build-env = SLINT_STYLE=material $(build-env)
 desktop-build-env = SLINT_STYLE=fluent $(build-env)
-desktop-debug-build-env = RUSTFLAGS="-Cllvm-args=-inline-threshold=10 -Cllvm-args=-inlinedefault-threshold=10 -Cllvm-args=-inlinehint-threshold=10"
 web-build-env = SLINT_STYLE=fluent $(build-env) RUSTFLAGS='--cfg getrandom_backend="wasm_js"'
-
-run-env = RUST_LOG=debug,reqwest=warn,sqlx=warn
+run-env = RUST_LOG=debug
 proj-features = --features=desktop,database,qrcode,center-window
 
 all: desktop-build-release
@@ -33,6 +31,9 @@ desktop-build-release:
 
 desktop-debug:
 	$(desktop-build-env) $(run-env) cargo run --bin ${app-name} --features=desktop
+
+desktop-debug-winit:
+	SLINT_BACKEND=winit-femtovg $(desktop-build-env) $(run-env) cargo run --bin ${app-name} --features=desktop
 
 web-build-debug:
 	cd $(app-name) && $(web-build-env) wasm-pack build --no-opt --dev --target web --out-dir ./web/pkg --features=web

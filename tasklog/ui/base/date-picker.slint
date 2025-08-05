@@ -326,22 +326,23 @@ export component DatePickerPopup inherits PopupWindow {
         dp.set-date(date);
     }
 
-    width: dp.width;
-    height: dp.height;
     close-policy: PopupClosePolicy.close-on-click-outside;
 
-    VerticalLayout {
-        dp := DatePicker {
-            border-radius: 0;
+    dp := DatePicker {
+        border-radius: 0;
 
-            canceled => {
-                root.close();
-            }
+        init => {
+            root.width = self.width;
+            root.height = self.height;
+        }
 
-            confirmed(date) => {
-                root.close();
-                root.confirmed(date);
-            }
+        canceled => {
+            root.close();
+        }
+
+        confirmed(date) => {
+            root.close();
+            root.confirmed(date);
         }
     }
 }

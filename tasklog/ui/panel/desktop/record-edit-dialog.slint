@@ -168,7 +168,7 @@ export component RecordEditDialog inherits Dialog {
 
     dp := DatePickerPopup {
         x: (root.width - self.width) / 2;
-        y: 50px;
+        y: (root.height - self.height) / 2;
 
         init => {
             self.set-date(Util.parse-date-str(dp-set-date-str));
