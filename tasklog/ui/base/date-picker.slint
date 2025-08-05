@@ -326,6 +326,7 @@ export component DatePickerPopup inherits PopupWindow {
         dp.set-date(date);
     }
 
+    width: dp.preferred-width;
     close-policy: PopupClosePolicy.close-on-click-outside;
 
     dp := DatePicker {
