@@ -2,6 +2,8 @@
 
 [中文文档](./README.zh-CN.md)
 
+[Introduction Video](https://youtu.be/f_Fq8rE-Ghs)
+
 ### Introduction
 It's a dead simple task track application.
 

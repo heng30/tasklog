@@ -2,6 +2,8 @@
 
 [English Documentation](./README.md)
 
+[介绍视频](https://www.bilibili.com/video/BV1ZWtBztE6x)
+
 ### 简介
 一个极简的任务追踪软件。
 
