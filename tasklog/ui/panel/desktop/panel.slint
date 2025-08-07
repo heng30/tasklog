@@ -183,24 +183,23 @@ export component DesktopPanel inherits Rectangle {
     private property <bool> is-show-record-edit-dialog: Store.current-popup-index == PopupIndex.RecordEdit;
     private property <bool> is-show-record-plan-dialog: Store.current-popup-index == PopupIndex.RecordPlan;
 
-    private property <length> home-height: self.height;
-
     background: Theme.base-background;
 
     VerticalLayout {
         if Store.setting-preference.no-frame: HorizontalStatusBar {
             disable-maximal: true;
-            init => {
-                root.home-height = root.height - self.preferred-height;
-            }
         }
 
         HorizontalLayout {
-            height: root.home-height;
+            vertical-stretch: 1;
 
-            if !Store.setting-preference.no-frame: VerticalStatusBar { }
+            if !Store.setting-preference.no-frame: VerticalStatusBar {
+                vertical-stretch: 1;
+            }
 
-            Home { }
+            Home {
+                vertical-stretch: 1;
+            }
         }
     }
 
