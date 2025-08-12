@@ -1,7 +1,7 @@
 import { ListView } from "std-widgets.slint";
 import { RecordState } from "../../store.slint";
 import { Theme, Icons, Store, Logic } from "../def.slint";
-import { Label, IconBtn, PopupActionSetting, CenterLayout, NoMessageImg } from "../../base/widgets.slint";
+import { Label, Tag, IconBtn, PopupActionSetting, CenterLayout, NoMessageImg } from "../../base/widgets.slint";
 
 component CellItem inherits Label { }
 
@@ -53,7 +53,7 @@ export component TableBody inherits ListView {
                     }
 
                     width: spent-width;
-                    text: days + " " + (days > 1 ? "days" : "day");
+                    text: days + " " + (days > 1 ? Logic.tr("days") : Logic.tr("day"));
                 }
 
                 HorizontalLayout {
@@ -65,14 +65,37 @@ export component TableBody inherits ListView {
                     }
                 }
 
-                CellItem {
-                    init => {
-                        state-width = Math.max(self.preferred-width, state-width);
-                    }
+                VerticalLayout {
+                    alignment: center;
 
-                    width: state-width;
-                    text: Logic.state-to-str(entry.state);
-                    color: Logic.state-color(entry.state);
+                    HorizontalLayout {
+                        alignment: LayoutAlignment.start;
+                        spacing: Theme.spacing * 2;
+
+                        for tag[index] in entry.tags: Tag {
+                            text: tag;
+                            background: Theme.tag-colors[index];
+                        }
+                    }
+                }
+
+                Rectangle {
+                    background: Logic.state-color(entry.state);
+                    width: state-item.width + Theme.padding * 4;
+                    height: state-item.height + Theme.padding * 2;
+                    border-radius: self.height / 2;
+
+                    state-item := CellItem {
+                        init => {
+                            state-width = Math.max(self.preferred-width, state-width);
+                        }
+
+                        width: state-width;
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                        text: Logic.state-to-str(entry.state);
+                        color: Theme.light-text-color;
+                    }
                 }
 
                 CellItem {
