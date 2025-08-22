@@ -215,18 +215,42 @@ component TaskCard inherits Rectangle {
             ]
 
             Label {
+                function calc-text(state: RecordState) -> string {
+                    if (entry.state == RecordState.NotStarted) {
+                        return Logic.tr("start in");
+                    } else if (entry.state == RecordState.Running) {
+                        return Logic.tr("remain");
+                    } else if (entry.state == RecordState.Timeout) {
+                        return Logic.tr("overtime");
+                    } else {
+                        return Logic.tr("spent");
+                    }
+                }
+
                 x: Math.max(0, led-number.x - self.preferred-width);
                 y: led-number.y + led-number.preferred-height - self.preferred-height - Theme.padding * 4;
-                text: entry.state == RecordState.NotStarted ? Logic.tr("start in") : (entry.state == RecordState.Running ? Logic.tr("remain") : Logic.tr("spent"));
+                text: calc-text(entry.state);
                 color: Theme.placeholder-text-color;
             }
 
             led-number := HorizontalLedNumber {
+                function calc-numbers(state: RecordState) -> [int] {
+                    if (entry.state == RecordState.NotStarted) {
+                        return Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date);
+                    } else if (entry.state == RecordState.Running) {
+                        return Logic.remain-days-numbers(Util.date-str(current-date), entry.end-date);
+                    } else if (entry.state == RecordState.Timeout) {
+                        return Logic.remain-days-numbers(entry.end-date, Util.date-str(current-date));
+                    } else {
+                        return Logic.remain-days-numbers(entry.start-date, entry.end-date);
+                    }
+                }
+
                 number-spacing: Theme.spacing * 2;
                 number-padding: Theme.padding * 4;
                 number-size: Theme.icon-size * 2;
                 colorize: Logic.state-color(entry.state);
-                numbers: entry.state == RecordState.NotStarted ? Logic.remain-days-numbers(Util.date-str(current-date), entry.start-date) : Logic.remain-days-numbers(Util.date-str(current-date), entry.end-date);
+                numbers: calc-numbers(entry.state);
 
                 led-number-ta := TouchArea {
                     mouse-cursor: self.has-hover ? MouseCursor.pointer : MouseCursor.default;

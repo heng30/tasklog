@@ -191,6 +191,7 @@ pub fn tr(text: &str) -> String {
         ("Plan", "计划"),
         ("Recover", "恢复"),
         ("Remove", "删除"),
+        ("overtime", "超时"),
     ]);
 
     if let Some(txt) = items.get(text) {
